@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useMemo} from 'react';
 import {
   Text,
   View,
@@ -12,10 +12,8 @@ import {
 } from 'react-native';
 import {COLORS, SPACING} from '../theme/theme';
 import {
-  upcomingMovies,
-  nowPlayingMovies,
-  popularMovies,
-  baseImagePath,
+  apikey,
+  nearbyEvents,
 } from '../api/apicalls';
 import InputHeader from '../components/InputHeader';
 import CategoryHeader from '../components/CategoryHeader';
@@ -24,11 +22,34 @@ import MovieCard from '../components/MovieCard';
 
 const {width, height} = Dimensions.get('window');
 
-const getNowPlayingMoviesList = async () => {
+const currentWeekNumber = () => {
+  const currentDate = new Date();
+  const startDate = new Date(currentDate.getFullYear(), 0, 1);
+  const days = Math.floor((currentDate.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000));
+
+  const weekNumber = Math.ceil(days / 7);
+  return weekNumber;
+};
+
+const currentYear = () => {
+  const currentDate = new Date();
+
+  return currentDate.getFullYear();
+};
+
+const getNearbyEventList = async (limit: number, offset: number, where: string) => {
   try {
-    let response = await fetch(nowPlayingMovies);
+    let options = {
+      method: 'GET',
+      headers: {
+        'xc-token': apikey
+      }
+    };
+
+    let response = await fetch(nearbyEvents(offset, limit, where), options);
     let json = await response.json();
-    return json;
+
+    return json.list;
   } catch (error) {
     console.error(
       ' Something went wrong in getNowPlayingMoviesList Function',
@@ -37,52 +58,23 @@ const getNowPlayingMoviesList = async () => {
   }
 };
 
-const getUpcomingMoviesList = async () => {
-  try {
-    let response = await fetch(upcomingMovies);
-    let json = await response.json();
-    return json;
-  } catch (error) {
-    console.error(
-      ' Something went wrong in getUpcomingMoviesList Function',
-      error,
-    );
-  }
-};
-
-const getPopularMoviesList = async () => {
-  try {
-    let response = await fetch(popularMovies);
-    let json = await response.json();
-    return json;
-  } catch (error) {
-    console.error(
-      ' Something went wrong in getPopularMoviesList Function',
-      error,
-    );
-  }
-};
-
 const HomeScreen = ({navigation}: any) => {
-  const [nowPlayingMoviesList, setNowPlayingMoviesList] =
-    useState<any>(undefined);
-  const [popularMoviesList, setPopularMoviesList] = useState<any>(undefined);
-  const [upcomingMoviesList, setUpcomingMoviesList] = useState<any>(undefined);
+  const [nearbyEventList, setNearbyEventList] = useState<any>(undefined);
+  const [upcomingEventList, setUpcomingEventList] = useState<any>(undefined);
 
   useEffect(() => {
     (async () => {
-      let tempNowPlaying = await getNowPlayingMoviesList();
-      setNowPlayingMoviesList([
-        {id: 'dummy1'},
-        ...tempNowPlaying.results,
-        {id: 'dummy2'},
-      ]);
+      var weekNumber = currentWeekNumber(); 
+      var year = currentYear();
+      
+      const query = `(Week,eq,${weekNumber})~and(Year,eq,${year})`;
+      const queryUpcoming = `(Week,eq,${weekNumber+1})~and(Year,eq,${year})`;
 
-      let tempPopular = await getPopularMoviesList();
-      setPopularMoviesList(tempPopular.results);
+      let tempNearbyEvent = await getNearbyEventList(100, 0, query);
+      setNearbyEventList([...tempNearbyEvent]);
 
-      let tempUpcoming = await getUpcomingMoviesList();
-      setUpcomingMoviesList(tempUpcoming.results);
+      let tempUpcoming = await getNearbyEventList(100, 0, queryUpcoming);
+      setUpcomingEventList([...tempUpcoming]);
     })();
   }, []);
 
@@ -91,12 +83,10 @@ const HomeScreen = ({navigation}: any) => {
   };
 
   if (
-    nowPlayingMoviesList == undefined &&
-    nowPlayingMoviesList == null &&
-    popularMoviesList == undefined &&
-    popularMoviesList == null &&
-    upcomingMoviesList == undefined &&
-    upcomingMoviesList == null
+    nearbyEventList == undefined &&
+    nearbyEventList == null &&
+    upcomingEventList == undefined &&
+    upcomingEventList == null
   ) {
     return (
       <ScrollView
@@ -124,10 +114,10 @@ const HomeScreen = ({navigation}: any) => {
         <InputHeader searchFunction={searchMoviesFunction} />
       </View>
 
-      <CategoryHeader title={'Now Playing'} />
+      <CategoryHeader title={'Nearby Event'} />
       <FlatList
-        data={nowPlayingMoviesList}
-        keyExtractor={(item: any) => item.id}
+        data={nearbyEventList}
+        keyExtractor={(item: any) => item.Id}
         bounces={false}
         snapToInterval={width * 0.7 + SPACING.space_36}
         horizontal
@@ -135,7 +125,10 @@ const HomeScreen = ({navigation}: any) => {
         decelerationRate={0}
         contentContainerStyle={styles.containerGap36}
         renderItem={({item, index}) => {
-          if (!item.original_title) {
+
+          var date = item.Date ? new Date(item.Date) : new Date();
+
+          if (!item.Name) {
             return (
               <View
                 style={{
@@ -143,50 +136,28 @@ const HomeScreen = ({navigation}: any) => {
                 }}></View>
             );
           }
+
           return (
             <MovieCard
               shoudlMarginatedAtEnd={true}
               cardFunction={() => {
-                navigation.push('MovieDetails', {movieid: item.id});
+                navigation.push('MovieDetails', {movieid: item.Id});
               }}
               cardWidth={width * 0.7}
               isFirst={index == 0 ? true : false}
-              isLast={index == upcomingMoviesList?.length - 1 ? true : false}
-              title={item.original_title}
-              imagePath={baseImagePath('w780', item.poster_path)}
-              genre={item.genre_ids.slice(1, 4)}
-              vote_average={item.vote_average}
-              vote_count={item.vote_count}
+              isLast={index == nearbyEventList?.length - 1 ? true : false}
+              title={item.Name}
+              imagePath={item.PosterImg ? item.PosterImg[0].signedUrl : ''}
+              genre={[date.toDateString(), `${date.getHours()}:${date.getMinutes()}`]}
+              vote_count={item.TotalSeat}
             />
           );
         }}
       />
-      <CategoryHeader title={'Popular'} />
-      <FlatList
-        data={popularMoviesList}
-        keyExtractor={(item: any) => item.id}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        bounces={false}
-        contentContainerStyle={styles.containerGap36}
-        renderItem={({item, index}) => (
-          <SubMovieCard
-            shoudlMarginatedAtEnd={true}
-            cardFunction={() => {
-              navigation.push('MovieDetails', {movieid: item.id});
-            }}
-            cardWidth={width / 3}
-            isFirst={index == 0 ? true : false}
-            isLast={index == upcomingMoviesList?.length - 1 ? true : false}
-            title={item.original_title}
-            imagePath={baseImagePath('w342', item.poster_path)}
-          />
-        )}
-      />
       <CategoryHeader title={'Upcoming'} />
       <FlatList
-        data={upcomingMoviesList}
-        keyExtractor={(item: any) => item.id}
+        data={upcomingEventList}
+        keyExtractor={(item: any) => item.Id}
         horizontal
         bounces={false}
         showsHorizontalScrollIndicator={false}
@@ -195,13 +166,13 @@ const HomeScreen = ({navigation}: any) => {
           <SubMovieCard
             shoudlMarginatedAtEnd={true}
             cardFunction={() => {
-              navigation.push('MovieDetails', {movieid: item.id});
+              navigation.push('MovieDetails', {movieid: item.Id});
             }}
             cardWidth={width / 3}
             isFirst={index == 0 ? true : false}
-            isLast={index == upcomingMoviesList?.length - 1 ? true : false}
-            title={item.original_title}
-            imagePath={baseImagePath('w342', item.poster_path)}
+            isLast={index == upcomingEventList?.length - 1 ? true : false}
+            title={item.Name}
+            imagePath={item.PosterImg ? item.PosterImg[0].signedUrl : ''}
           />
         )}
       />

@@ -9,28 +9,6 @@ import {
 } from '../theme/theme';
 import CustomIcon from './CustomIcon';
 
-const genres: any = {
-  28: 'Action',
-  12: 'Adventure',
-  16: 'Animation',
-  35: 'Comedy',
-  80: 'Crime',
-  99: 'Documentry',
-  18: 'Drama',
-  10751: 'Family',
-  14: 'Fantasy',
-  36: 'History',
-  27: 'Horror',
-  10402: 'Music',
-  9648: 'Mystry',
-  10749: 'Romance',
-  878: 'Science Fiction',
-  10770: 'TV Movie',
-  53: 'Thriller',
-  10752: 'War',
-  37: 'Western',
-};
-
 const MovieCard = (props: any) => {
   return (
     <TouchableOpacity onPress={() => props.cardFunction()}>
@@ -56,7 +34,7 @@ const MovieCard = (props: any) => {
           <View style={styles.rateContainer}>
             <CustomIcon name="star" style={styles.starIcon} />
             <Text style={styles.voteText}>
-              {props.vote_average} ({props.vote_count})
+              ({props.vote_count})
             </Text>
           </View>
 
@@ -68,7 +46,7 @@ const MovieCard = (props: any) => {
             {props.genre.map((item: any) => {
               return (
                 <View key={item} style={styles.genreBox}>
-                  <Text style={styles.genreText}>{genres[item]}</Text>
+                  <Text style={styles.genreText}>{item}</Text>
                 </View>
               );
             })}
