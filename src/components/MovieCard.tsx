@@ -32,7 +32,7 @@ const MovieCard = (props: any) => {
 
         <View>
           <View style={styles.rateContainer}>
-            <CustomIcon name="star" style={styles.starIcon} />
+            <CustomIcon name="seat" style={styles.seatIcon} />
             <Text style={styles.voteText}>
               ({props.vote_count})
             </Text>
@@ -84,6 +84,10 @@ const styles = StyleSheet.create({
   starIcon: {
     fontSize: FONTSIZE.size_20,
     color: COLORS.Yellow,
+  },
+  seatIcon: {
+    fontSize: FONTSIZE.size_24,
+    color: COLORS.White,
   },
   voteText: {
     fontFamily: FONTFAMILY.poppins_medium,

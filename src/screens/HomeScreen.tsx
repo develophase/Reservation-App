@@ -127,7 +127,6 @@ const HomeScreen = ({navigation}: any) => {
         renderItem={({item, index}) => {
 
           var date = item.Date ? new Date(item.Date) : new Date();
-
           if (!item.Name) {
             return (
               <View

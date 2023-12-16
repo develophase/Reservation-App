@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   Text,
   View,
@@ -22,32 +22,9 @@ import AppHeader from '../components/AppHeader';
 import CustomIcon from '../components/CustomIcon';
 import EncryptedStorage from 'react-native-encrypted-storage';
 
-const timeArray: string[] = [
-  '10:30',
-  '12:30',
-  '14:30',
-  '15:00',
-  '19:30',
-  '21:00',
-];
-
-const generateDate = () => {
-  const date = new Date();
-  let weekday = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  let weekdays = [];
-  for (let i = 0; i < 7; i++) {
-    let tempDate = {
-      date: new Date(date.getTime() + i * 24 * 60 * 60 * 1000).getDate(),
-      day: weekday[new Date(date.getTime() + i * 24 * 60 * 60 * 1000).getDay()],
-    };
-    weekdays.push(tempDate);
-  }
-  return weekdays;
-};
-
-const generateSeats = () => {
-  let numRow = 8;
-  let numColumn = 3;
+const generateSeats = (eventId: number, row: number, col: number, level: number) => {
+  let numRow = row;
+  let numColumn = col;
   let rowArray = [];
   let start = 1;
   let reachnine = false;
@@ -63,62 +40,62 @@ const generateSeats = () => {
       columnArray.push(seatObject);
       start++;
     }
-    if (i == 3) {
-      numColumn += 2;
-    }
-    if (numColumn < 9 && !reachnine) {
-      numColumn += 2;
-    } else {
-      reachnine = true;
-      numColumn -= 2;
-    }
     rowArray.push(columnArray);
   }
   return rowArray;
 };
 
+const getDate = (date: string) => {
+  const currentDate = new Date(date);
+  return currentDate.toDateString();
+};
+
+const getTime = (date: string) => {
+  const currentDate = new Date(date);
+  return `${currentDate.getHours()}:${currentDate.getMinutes()}`;
+};
+
 const SeatBookingScreen = ({navigation, route}: any) => {
-  const [dateArray, setDateArray] = useState<any[]>(generateDate());
-  const [selectedDateIndex, setSelectedDateIndex] = useState<any>();
-  const [price, setPrice] = useState<number>(0);
-  const [twoDSeatArray, setTwoDSeatArray] = useState<any[][]>(generateSeats());
-  const [selectedSeatArray, setSelectedSeatArray] = useState([]);
-  const [selectedTimeIndex, setSelectedTimeIndex] = useState<any>();
+  const [twoDSeatArray, setTwoDSeatArray] = useState<any[][]>(generateSeats(route.params.eventid, route.params.row, route.params.col, route.params.level));
+  const [selectedSeat, setSelectedSeat] = useState({ index: 0, subindex: 0, num: 0 });
 
   const selectSeat = (index: number, subindex: number, num: number) => {
     if (!twoDSeatArray[index][subindex].taken) {
-      let array: any = [...selectedSeatArray];
+      let oldSeat = selectedSeat;
+      let newSeat = {
+        index: index,
+        subindex: subindex,
+        num: num
+      };
+
       let temp = [...twoDSeatArray];
-      temp[index][subindex].selected = !temp[index][subindex].selected;
-      if (!array.includes(num)) {
-        array.push(num);
-        setSelectedSeatArray(array);
+
+      if (oldSeat.num == 0) {
+        temp[newSeat.index][newSeat.subindex].selected = !temp[newSeat.index][newSeat.subindex].selected;
+        setSelectedSeat(newSeat);
       } else {
-        const tempindex = array.indexOf(num);
-        if (tempindex > -1) {
-          array.splice(tempindex, 1);
-          setSelectedSeatArray(array);
-        }
+        temp[oldSeat.index][oldSeat.subindex].selected = !temp[oldSeat.index][oldSeat.subindex].selected;
+        temp[newSeat.index][newSeat.subindex].selected = !temp[newSeat.index][newSeat.subindex].selected;
+        setSelectedSeat(newSeat);
       }
-      setPrice(array.length * 5.0);
+
       setTwoDSeatArray(temp);
     }
   };
 
   const BookSeats = async () => {
     if (
-      selectedSeatArray.length !== 0 &&
-      timeArray[selectedTimeIndex] !== undefined &&
-      dateArray[selectedDateIndex] !== undefined
+      selectedSeat.num !== 0
     ) {
+      const currentTime = new Date();
       try {
         await EncryptedStorage.setItem(
           'ticket',
           JSON.stringify({
-            seatArray: selectedSeatArray,
-            time: timeArray[selectedTimeIndex],
-            date: dateArray[selectedDateIndex],
-            ticketImage: route.params.PosterImage,
+            seat: selectedSeat,
+            time: getTime(currentTime.toString()),
+            date: getDate(currentTime.toString()),
+            ticketImage: route.params.posterimg,
           }),
         );
       } catch (error) {
@@ -127,15 +104,17 @@ const SeatBookingScreen = ({navigation, route}: any) => {
           error,
         );
       }
+
       navigation.navigate('Ticket', {
-        seatArray: selectedSeatArray,
-        time: timeArray[selectedTimeIndex],
-        date: dateArray[selectedDateIndex],
-        ticketImage: route.params.PosterImage,
+        seat: selectedSeat,
+        time: getTime(currentTime.toString()),
+        date: getDate(currentTime.toString()),
+        ticketImage: route.params.posterimg,
       });
+
     } else {
       ToastAndroid.showWithGravity(
-        'Please Select Seats, Date and Time of the Show',
+        'Please Select Seats',
         ToastAndroid.SHORT,
         ToastAndroid.BOTTOM,
       );
@@ -150,7 +129,9 @@ const SeatBookingScreen = ({navigation, route}: any) => {
       <StatusBar hidden />
       <View>
         <ImageBackground
-          source={{uri: route.params?.BgImage}}
+          source={
+            require('../assets/image/prayer.jpg')
+          }
           style={styles.ImageBG}>
           <LinearGradient
             colors={[COLORS.BlackRGB10, COLORS.Black]}
@@ -216,74 +197,9 @@ const SeatBookingScreen = ({navigation, route}: any) => {
         </View>
       </View>
 
-      <View>
-        <FlatList
-          data={dateArray}
-          keyExtractor={item => item.date}
-          horizontal
-          bounces={false}
-          contentContainerStyle={styles.containerGap24}
-          renderItem={({item, index}) => {
-            return (
-              <TouchableOpacity onPress={() => setSelectedDateIndex(index)}>
-                <View
-                  style={[
-                    styles.dateContainer,
-                    index == 0
-                      ? {marginLeft: SPACING.space_24}
-                      : index == dateArray.length - 1
-                      ? {marginRight: SPACING.space_24}
-                      : {},
-                    index == selectedDateIndex
-                      ? {backgroundColor: COLORS.Orange}
-                      : {},
-                  ]}>
-                  <Text style={styles.dateText}>{item.date}</Text>
-                  <Text style={styles.dayText}>{item.day}</Text>
-                </View>
-              </TouchableOpacity>
-            );
-          }}
-        />
-      </View>
-
-      <View style={styles.OutterContainer}>
-        <FlatList
-          data={timeArray}
-          keyExtractor={item => item}
-          horizontal
-          bounces={false}
-          contentContainerStyle={styles.containerGap24}
-          renderItem={({item, index}) => {
-            return (
-              <TouchableOpacity onPress={() => setSelectedTimeIndex(index)}>
-                <View
-                  style={[
-                    styles.timeContainer,
-                    index == 0
-                      ? {marginLeft: SPACING.space_24}
-                      : index == dateArray.length - 1
-                      ? {marginRight: SPACING.space_24}
-                      : {},
-                    index == selectedTimeIndex
-                      ? {backgroundColor: COLORS.Orange}
-                      : {},
-                  ]}>
-                  <Text style={styles.timeText}>{item}</Text>
-                </View>
-              </TouchableOpacity>
-            );
-          }}
-        />
-      </View>
-
       <View style={styles.buttonPriceContainer}>
-        <View style={styles.priceContainer}>
-          <Text style={styles.totalPriceText}>Total Price</Text>
-          <Text style={styles.price}>$ {price}.00</Text>
-        </View>
         <TouchableOpacity onPress={BookSeats}>
-          <Text style={styles.buttonText}>Buy Tickets</Text>
+          <Text style={styles.buttonText}>Book Seat</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>

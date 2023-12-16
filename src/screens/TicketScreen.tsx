@@ -6,6 +6,7 @@ import {
   StatusBar,
   ImageBackground,
   Image,
+  ScrollView
 } from 'react-native';
 import EncryptedStorage from 'react-native-encrypted-storage';
 import AppHeader from '../components/AppHeader';
@@ -53,18 +54,23 @@ const TicketScreen = ({navigation, route}: any) => {
       </View>
     );
   }
+
   return (
-    <View style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      bounces={false}
+      showsVerticalScrollIndicator={false}>
+
       <StatusBar hidden />
       <View style={styles.appHeaderContainer}>
-        <AppHeader
-          name="close"
-          header={'My Tickets'}
-          action={() => navigation.goBack()}
-        />
+          <AppHeader
+            name="close"
+            header={'My Tickets'}
+            action={() => navigation.goBack()}
+          />
       </View>
-
       <View style={styles.ticketContainer}>
+
         <ImageBackground
           source={{uri: ticketData?.ticketImage}}
           style={styles.ticketBGImage}>
@@ -97,42 +103,33 @@ const TicketScreen = ({navigation, route}: any) => {
               {position: 'absolute', top: -40, right: -40},
             ]}></View>
           <View style={styles.ticketDateContainer}>
+            <CustomIcon name="clock" style={styles.clockIcon} />
             <View style={styles.subtitleContainer}>
               <Text style={styles.dateTitle}>{ticketData?.date.date}</Text>
               <Text style={styles.subtitle}>{ticketData?.date.day}</Text>
             </View>
             <View style={styles.subtitleContainer}>
-              <CustomIcon name="clock" style={styles.clockIcon} />
               <Text style={styles.subtitle}>{ticketData?.time}</Text>
             </View>
           </View>
           <View style={styles.ticketSeatContainer}>
             <View style={styles.subtitleContainer}>
-              <Text style={styles.subheading}>Hall</Text>
-              <Text style={styles.subtitle}>02</Text>
+              <Text style={styles.subheading}>Row</Text>
+              <Text style={styles.subtitle}>{ticketData?.seat.index+1}</Text>
             </View>
             <View style={styles.subtitleContainer}>
-              <Text style={styles.subheading}>Row</Text>
-              <Text style={styles.subtitle}>04</Text>
+              <Text style={styles.subheading}>Col</Text>
+              <Text style={styles.subtitle}>{ticketData?.seat.subindex+1}</Text>
             </View>
+
             <View style={styles.subtitleContainer}>
               <Text style={styles.subheading}>Seats</Text>
-              <Text style={styles.subtitle}>
-                {ticketData?.seatArray
-                  .slice(0, 3)
-                  .map((item: any, index: number, arr: any) => {
-                    return item + (index == arr.length - 1 ? '' : ', ');
-                  })}
-              </Text>
+              <Text style={styles.subtitle}>{ticketData?.seat.num}</Text>
             </View>
           </View>
-          <Image
-            source={require('../assets/image/barcode.png')}
-            style={styles.barcodeImage}
-          />
         </View>
       </View>
-    </View>
+    </ScrollView>
   );
 };
 

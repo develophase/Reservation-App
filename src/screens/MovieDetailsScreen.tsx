@@ -58,7 +58,6 @@ const MovieDetailsScreen = ({navigation, route}: any) => {
   useEffect(() => {
     (async () => {
       const tempEventData = await getEventDetails(route.params.movieid);
-      console.log(tempEventData);
       setEventData(tempEventData);
     })();
   }, []);
@@ -95,9 +94,9 @@ const MovieDetailsScreen = ({navigation, route}: any) => {
 
       <View>
         <ImageBackground
-          source={{
-            uri: eventData.BackgroundImg[0].signedUrl,
-          }}
+          source={
+            require('../assets/image/prayer.jpg')
+          }
           style={styles.imageBG}>
           <LinearGradient
             colors={[COLORS.BlackRGB10, COLORS.Black]}
@@ -121,8 +120,12 @@ const MovieDetailsScreen = ({navigation, route}: any) => {
       <View style={styles.timeContainer}>
         <CustomIcon name="clock" style={styles.clockIcon} />
         <Text style={styles.runtimeText}>
-          {getDate(eventData?.Date)}{' '}
-          {getTime(eventData?.Date)}
+            {eventData?.Date.substring(8, 10)}{' '}
+            {new Date(eventData?.Date).toLocaleString('default', {
+              month: 'long',
+            })}{' '}
+            {eventData?.Date.substring(0, 4)}{' '}
+            {getTime(eventData?.Date)}
         </Text>
       </View>
 
@@ -132,16 +135,9 @@ const MovieDetailsScreen = ({navigation, route}: any) => {
 
       <View style={styles.infoContainer}>
         <View style={styles.rateContainer}>
-          <CustomIcon name="star" style={styles.starIcon} />
+          <CustomIcon name="seat" style={styles.seatIcon} />
           <Text style={styles.runtimeText}>
             {eventData?.TotalSeat}
-          </Text>
-          <Text style={styles.runtimeText}>
-            {eventData?.Date.substring(8, 10)}{' '}
-            {new Date(eventData?.Date).toLocaleString('default', {
-              month: 'long',
-            })}{' '}
-            {eventData?.Date.substring(0, 4)}
           </Text>
         </View>
         <Text style={styles.descriptionText}>{eventData?.Desc}</Text>
@@ -153,8 +149,11 @@ const MovieDetailsScreen = ({navigation, route}: any) => {
             style={styles.buttonBG}
             onPress={() => {
               navigation.push('SeatBooking', {
-                BgImage: eventData.BackgroundImg[0].signedUrl,
-                PosterImage: eventData.PosterImg[0].signedUrl,
+               eventid: eventData.Id,
+               posterimg: eventData.PosterImg[0].signedUrl,
+               row: eventData.Row,
+               col: eventData.Col,
+               level: eventData.Level
               });
             }}>
             <Text style={styles.buttonText}>Select Seats</Text>
@@ -261,6 +260,10 @@ const styles = StyleSheet.create({
   starIcon: {
     fontSize: FONTSIZE.size_20,
     color: COLORS.Yellow,
+  },
+  seatIcon: {
+    fontSize: FONTSIZE.size_24,
+    color: COLORS.White,
   },
   descriptionText: {
     fontFamily: FONTFAMILY.poppins_light,
