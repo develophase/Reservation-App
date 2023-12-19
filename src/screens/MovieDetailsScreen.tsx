@@ -44,7 +44,7 @@ const getEventDetails = async (movieid: number) => {
 
 const getDate = (date: string) => {
   const currentDate = new Date(date);
-  return currentDate.toDateString();
+  return `${date.substring(8, 10)} ${currentDate.toLocaleString('default', { month: 'long' })} ${date.substring(0, 4)} `
 };
 
 const getTime = (date: string) => {
@@ -120,11 +120,7 @@ const MovieDetailsScreen = ({navigation, route}: any) => {
       <View style={styles.timeContainer}>
         <CustomIcon name="clock" style={styles.clockIcon} />
         <Text style={styles.runtimeText}>
-            {eventData?.Date.substring(8, 10)}{' '}
-            {new Date(eventData?.Date).toLocaleString('default', {
-              month: 'long',
-            })}{' '}
-            {eventData?.Date.substring(0, 4)}{' '}
+            {getDate(eventData?.Date)}
             {getTime(eventData?.Date)}
         </Text>
       </View>
@@ -150,6 +146,8 @@ const MovieDetailsScreen = ({navigation, route}: any) => {
             onPress={() => {
               navigation.push('SeatBooking', {
                eventid: eventData.Id,
+               eventdate: getDate(eventData.Date),
+               eventtime: getTime(eventData.Date),
                posterimg: eventData.PosterImg[0].signedUrl,
                row: eventData.Row,
                col: eventData.Col,

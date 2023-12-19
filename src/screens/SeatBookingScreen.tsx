@@ -7,8 +7,8 @@ import {
   StatusBar,
   ImageBackground,
   TouchableOpacity,
-  FlatList,
   ToastAndroid,
+  ActivityIndicator
 } from 'react-native';
 import {
   BORDERRADIUS,
@@ -17,47 +17,141 @@ import {
   FONTSIZE,
   SPACING,
 } from '../theme/theme';
+import {apikey, bookedSeatByEventIds, createBookedSeat} from '../api/apicalls';
 import LinearGradient from 'react-native-linear-gradient';
 import AppHeader from '../components/AppHeader';
 import CustomIcon from '../components/CustomIcon';
 import EncryptedStorage from 'react-native-encrypted-storage';
 
-const generateSeats = (eventId: number, row: number, col: number, level: number) => {
+const getBookedSeat = async (eventId: number, row: number, col: number, level: number) => {
+  try {
+    let options = {
+      method: 'GET',
+      headers: {
+        'xc-token': apikey
+      }
+    };
+
+    let query = `(EventsId,eq,${eventId})`;
+
+    let response = await fetch(bookedSeatByEventIds(0, (row * col), query), options);
+    let json = await response.json();
+
+    return json.list;
+
+  } catch (error) {
+    console.error('Something Went wrong in getMoviesDetails Function', error);
+  }
+};
+
+const checkAvailableSeat = async (eventId: number, row: number, col: number, level: number) => {
+  try {
+    let options = {
+      method: 'GET',
+      headers: {
+        'xc-token': apikey
+      }
+    };
+
+    let query = `(EventsId,eq,${eventId})~and(Row,eq,${row}~and(Col,eq,${col}`;
+
+    let response = await fetch(bookedSeatByEventIds(0, (row * col), query), options);
+    let json = await response.json();
+
+    return json.list;
+
+  } catch (error) {
+    console.error('Something Went wrong in getMoviesDetails Function', error);
+  }
+};
+
+const generateSeats = async (bookedSeat: any[], userLogin: any, row: number, col: number, level: number) => {
   let numRow = row;
   let numColumn = col;
   let rowArray = [];
   let start = 1;
-  let reachnine = false;
-
+  
   for (let i = 0; i < numRow; i++) {
     let columnArray = [];
     for (let j = 0; j < numColumn; j++) {
+      let seatTaken = bookedSeat.find(s => s.Row-1 == i && s.Col-1 == j && s.AccountsId != userLogin.Id);
+      let seatBooked = bookedSeat.find(s => s.Row-1 == i && s.Col-1 == j && s.AccountsId == userLogin.Id);
+
       let seatObject = {
         number: start,
-        taken: Boolean(Math.round(Math.random())),
-        selected: false,
+        taken: seatTaken != null ? true : false,
+        selected: seatBooked != null ? true : false,
       };
+
       columnArray.push(seatObject);
       start++;
     }
     rowArray.push(columnArray);
   }
+
   return rowArray;
 };
 
-const getDate = (date: string) => {
-  const currentDate = new Date(date);
-  return currentDate.toDateString();
-};
+const bookSeats = async (eventId: number, bookedSeat: any, userLogin: any) => {
+  try {
+    let payload = {
+      "EventsId": eventId,
+      "AccountsName": userLogin.Usename,
+      "ReservationDate": new Date(),
+      "Status": 1,
+      "ReservationCode": `${eventId}-${userLogin.Id}-${bookedSeat.index}-${bookedSeat.subindex}`,
+      "QrCode": `${eventId}-${userLogin.Id}-${bookedSeat.index}-${bookedSeat.subindex}`,
+      "Row": bookedSeat.index,
+      "Level": 1,
+      "Col": bookedSeat.subindex,
+      "ArrivalDate": new Date(),
+      "AccountsId": userLogin.Id
+    }
 
-const getTime = (date: string) => {
-  const currentDate = new Date(date);
-  return `${currentDate.getHours()}:${currentDate.getMinutes()}`;
+    let options = {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'xc-token': apikey
+      },
+      body: JSON.stringify({payload})
+    };
+
+    let response = await fetch(createBookedSeat(), options);
+    let json = await response.json();
+
+    return json
+    //return json.list;
+
+  } catch (error) {
+    console.error('Something Went wrong in getMoviesDetails Function', error);
+  }
 };
 
 const SeatBookingScreen = ({navigation, route}: any) => {
-  const [twoDSeatArray, setTwoDSeatArray] = useState<any[][]>(generateSeats(route.params.eventid, route.params.row, route.params.col, route.params.level));
+  const [twoDSeatArray, setTwoDSeatArray] = useState<any[][]>([]);
   const [selectedSeat, setSelectedSeat] = useState({ index: 0, subindex: 0, num: 0 });
+  const [bookedSeat, setBookedSeat] = useState<any[]>([]);
+  const [userLogin, setUserLogin] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      const session = await EncryptedStorage.getItem('login_user');
+      if(session !== null && session !== undefined) {
+        setUserLogin(session);
+        await getBookedSeat(route.params.eventid, route.params.row, route.params.col, route.params.level)
+          .then(async (bookedSeatByEvenId) => {
+              setBookedSeat(bookedSeatByEvenId);
+              await generateSeats(bookedSeatByEvenId, session, route.params.row, route.params.col, route.params.level)
+                .then(async (seat) => {
+                  setTwoDSeatArray(seat);
+                  setIsLoading(false);
+                });
+          });
+      }
+    })();
+  }, []);
 
   const selectSeat = (index: number, subindex: number, num: number) => {
     if (!twoDSeatArray[index][subindex].taken) {
@@ -87,17 +181,34 @@ const SeatBookingScreen = ({navigation, route}: any) => {
     if (
       selectedSeat.num !== 0
     ) {
-      const currentTime = new Date();
       try {
-        await EncryptedStorage.setItem(
-          'ticket',
-          JSON.stringify({
-            seat: selectedSeat,
-            time: getTime(currentTime.toString()),
-            date: getDate(currentTime.toString()),
-            ticketImage: route.params.posterimg,
-          }),
-        );
+        await checkAvailableSeat(route.params.eventid, selectedSeat.index, selectedSeat.subindex, 0)
+          .then(async (available) => {
+            console.log(available);
+            if(available == undefined) {
+              setIsLoading(true);
+              await bookSeats(route.params.eventid, selectedSeat, userLogin)
+                .then(async (response) => {
+                  if(response?.Id) {
+                    setIsLoading(false);
+                    ToastAndroid.showWithGravity(
+                      'Seat Booking Success',
+                      ToastAndroid.SHORT,
+                      ToastAndroid.BOTTOM,
+                    );
+                  }
+                })
+            }
+          })
+        // await EncryptedStorage.setItem(
+        //   'ticket',
+        //   JSON.stringify({
+        //     seat: selectedSeat,
+        //     time: route.params.eventtime,
+        //     date: route.params.eventdate,
+        //     ticketImage: route.params.posterimg,
+        //   }),
+        // );
       } catch (error) {
         console.error(
           'Something went Wrong while storing in BookSeats Functions',
@@ -105,12 +216,12 @@ const SeatBookingScreen = ({navigation, route}: any) => {
         );
       }
 
-      navigation.navigate('Ticket', {
-        seat: selectedSeat,
-        time: getTime(currentTime.toString()),
-        date: getDate(currentTime.toString()),
-        ticketImage: route.params.posterimg,
-      });
+      // navigation.navigate('Ticket', {
+      //   seat: selectedSeat,
+      //   time: route.params.eventtime,
+      //   date: route.params.eventdate,
+      //   ticketImage: route.params.posterimg,
+      // });
 
     } else {
       ToastAndroid.showWithGravity(
@@ -148,60 +259,69 @@ const SeatBookingScreen = ({navigation, route}: any) => {
         <Text style={styles.screenText}>Screen this side</Text>
       </View>
 
-      <View style={styles.seatContainer}>
-        <View style={styles.containerGap20}>
-          {twoDSeatArray?.map((item, index) => {
-            return (
-              <View key={index} style={styles.seatRow}>
-                {item?.map((subitem, subindex) => {
-                  return (
-                    <TouchableOpacity
-                      key={subitem.number}
-                      onPress={() => {
-                        selectSeat(index, subindex, subitem.number);
-                      }}>
-                      <CustomIcon
-                        name="seat"
-                        style={[
-                          styles.seatIcon,
-                          subitem.taken ? {color: COLORS.Grey} : {},
-                          subitem.selected ? {color: COLORS.Orange} : {},
-                        ]}
-                      />
-                    </TouchableOpacity>
-                  );
-                })}
+      { isLoading ? 
+        (
+          <ActivityIndicator size={'large'} color={COLORS.Orange} />
+        ) : 
+        (
+        <View>
+          <View style={styles.seatContainer}>
+            <View style={styles.containerGap20}>
+              {twoDSeatArray?.map((item, index) => {
+                return (
+                  <View key={index} style={styles.seatRow}>
+                    {item?.map((subitem, subindex) => {
+                      return (
+                        <TouchableOpacity
+                          key={subitem.number}
+                          onPress={() => {
+                            selectSeat(index, subindex, subitem.number);
+                          }}>
+                          <CustomIcon
+                            name="seat"
+                            style={[
+                              styles.seatIcon,
+                              subitem.taken ? {color: COLORS.Grey} : {},
+                              subitem.selected ? {color: COLORS.Orange} : {},
+                            ]}
+                          />
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                );
+              })}
+            </View>
+            <View style={styles.seatRadioContainer}>
+              <View style={styles.radioContainer}>
+                <CustomIcon name="radio" style={styles.radioIcon} />
+                <Text style={styles.radioText}>Available</Text>
               </View>
-            );
-          })}
-        </View>
-        <View style={styles.seatRadioContainer}>
-          <View style={styles.radioContainer}>
-            <CustomIcon name="radio" style={styles.radioIcon} />
-            <Text style={styles.radioText}>Available</Text>
+              <View style={styles.radioContainer}>
+                <CustomIcon
+                  name="radio"
+                  style={[styles.radioIcon, {color: COLORS.Grey}]}
+                />
+                <Text style={styles.radioText}>Taken</Text>
+              </View>
+              <View style={styles.radioContainer}>
+                <CustomIcon
+                  name="radio"
+                  style={[styles.radioIcon, {color: COLORS.Orange}]}
+                />
+                <Text style={styles.radioText}>Selected</Text>
+              </View>
+            </View>
           </View>
-          <View style={styles.radioContainer}>
-            <CustomIcon
-              name="radio"
-              style={[styles.radioIcon, {color: COLORS.Grey}]}
-            />
-            <Text style={styles.radioText}>Taken</Text>
-          </View>
-          <View style={styles.radioContainer}>
-            <CustomIcon
-              name="radio"
-              style={[styles.radioIcon, {color: COLORS.Orange}]}
-            />
-            <Text style={styles.radioText}>Selected</Text>
-          </View>
-        </View>
-      </View>
 
-      <View style={styles.buttonPriceContainer}>
-        <TouchableOpacity onPress={BookSeats}>
-          <Text style={styles.buttonText}>Book Seat</Text>
-        </TouchableOpacity>
-      </View>
+          <View style={styles.buttonPriceContainer}>
+            <TouchableOpacity onPress={BookSeats}>
+              <Text style={styles.buttonText}>Book Seat</Text>
+            </TouchableOpacity>
+          </View>
+        </View> 
+        )
+      }
     </ScrollView>
   );
 };
@@ -211,6 +331,14 @@ const styles = StyleSheet.create({
     display: 'flex',
     flex: 1,
     backgroundColor: COLORS.Black,
+  },
+  scrollViewContainer: {
+    flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignSelf: 'center',
+    justifyContent: 'center',
   },
   ImageBG: {
     width: '100%',

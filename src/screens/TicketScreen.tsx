@@ -105,8 +105,7 @@ const TicketScreen = ({navigation, route}: any) => {
           <View style={styles.ticketDateContainer}>
             <CustomIcon name="clock" style={styles.clockIcon} />
             <View style={styles.subtitleContainer}>
-              <Text style={styles.dateTitle}>{ticketData?.date.date}</Text>
-              <Text style={styles.subtitle}>{ticketData?.date.day}</Text>
+              <Text style={styles.subtitle}>{ticketData?.date}</Text>
             </View>
             <View style={styles.subtitleContainer}>
               <Text style={styles.subtitle}>{ticketData?.time}</Text>
@@ -178,7 +177,7 @@ const styles = StyleSheet.create({
   },
   ticketDateContainer: {
     flexDirection: 'row',
-    gap: SPACING.space_36,
+    gap: SPACING.space_10,
     alignItems: 'center',
     justifyContent: 'center',
     marginVertical: SPACING.space_10,

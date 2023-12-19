@@ -37,7 +37,7 @@ export default () =>
     };
 
     const getUserLogin = async () => {
-        const userLogin =  await EncryptedStorage.getItem('login_user');
+        const userLogin = await EncryptedStorage.getItem('login_user');
         return userLogin;
     };
 
@@ -46,7 +46,6 @@ export default () =>
             try {
                 const session = await getUserLogin();
                 if (session !== null && session !== undefined) {
-                    console.log(session);
                     const userLogin = JSON.parse(session);
                     const userAccount = await getAccount(0, 1, userLogin.Phone);
                     if(userAccount.length > 0) {
