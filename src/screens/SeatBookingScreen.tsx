@@ -17,7 +17,11 @@ import {
   FONTSIZE,
   SPACING,
 } from '../theme/theme';
-import {apikey, bookedSeatByEventIds, createBookedSeat} from '../api/apicalls';
+import { 
+  apikey, 
+  bookedSeatByEventIds, 
+  createBookedSeat
+} from '../api/apicalls';
 import LinearGradient from 'react-native-linear-gradient';
 import AppHeader from '../components/AppHeader';
 import CustomIcon from '../components/CustomIcon';
@@ -74,8 +78,8 @@ const generateSeats = async (bookedSeat: any[], userLogin: any, row: number, col
   for (let i = 0; i < numRow; i++) {
     let columnArray = [];
     for (let j = 0; j < numColumn; j++) {
-      let seatTaken = bookedSeat.find(s => s.Row-1 == i && s.Col-1 == j && s.AccountsId != userLogin.Id);
-      let seatBooked = bookedSeat.find(s => s.Row-1 == i && s.Col-1 == j && s.AccountsId == userLogin.Id);
+      let seatTaken = bookedSeat.find(s => s.Row == i && s.Col == j && s.AccountsId != userLogin.Id);
+      let seatBooked = bookedSeat.find(s => s.Row == i && s.Col == j && s.AccountsId == userLogin.Id);
 
       let seatObject = {
         number: start,
@@ -94,17 +98,18 @@ const generateSeats = async (bookedSeat: any[], userLogin: any, row: number, col
 
 const bookSeats = async (eventId: number, bookedSeat: any, userLogin: any) => {
   try {
+
     let payload = {
       "EventsId": eventId,
-      "AccountsName": userLogin.Usename,
-      "ReservationDate": new Date(),
+      "AccountsName": `${userLogin.Username}`,
+      "ReservationDate": `${new Date()}`,
       "Status": 1,
       "ReservationCode": `${eventId}-${userLogin.Id}-${bookedSeat.index}-${bookedSeat.subindex}`,
       "QrCode": `${eventId}-${userLogin.Id}-${bookedSeat.index}-${bookedSeat.subindex}`,
       "Row": bookedSeat.index,
       "Level": 1,
       "Col": bookedSeat.subindex,
-      "ArrivalDate": new Date(),
+      "ArrivalDate": `${new Date()}`,
       "AccountsId": userLogin.Id
     }
 
@@ -112,16 +117,17 @@ const bookSeats = async (eventId: number, bookedSeat: any, userLogin: any) => {
       method: 'POST',
       headers: {
         Accept: 'application/json',
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
         'xc-token': apikey
       },
-      body: JSON.stringify({payload})
+      body: JSON.stringify(payload)
     };
 
     let response = await fetch(createBookedSeat(), options);
     let json = await response.json();
 
-    return json
-    //return json.list;
+    return json;
 
   } catch (error) {
     console.error('Something Went wrong in getMoviesDetails Function', error);
@@ -139,11 +145,12 @@ const SeatBookingScreen = ({navigation, route}: any) => {
     (async () => {
       const session = await EncryptedStorage.getItem('login_user');
       if(session !== null && session !== undefined) {
-        setUserLogin(session);
+        const userLoginTemp = await JSON.parse(session);
+        setUserLogin(userLoginTemp);
         await getBookedSeat(route.params.eventid, route.params.row, route.params.col, route.params.level)
           .then(async (bookedSeatByEvenId) => {
               setBookedSeat(bookedSeatByEvenId);
-              await generateSeats(bookedSeatByEvenId, session, route.params.row, route.params.col, route.params.level)
+              await generateSeats(bookedSeatByEvenId, userLoginTemp, route.params.row, route.params.col, route.params.level)
                 .then(async (seat) => {
                   setTwoDSeatArray(seat);
                   setIsLoading(false);
@@ -184,12 +191,12 @@ const SeatBookingScreen = ({navigation, route}: any) => {
       try {
         await checkAvailableSeat(route.params.eventid, selectedSeat.index, selectedSeat.subindex, 0)
           .then(async (available) => {
-            console.log(available);
             if(available == undefined) {
               setIsLoading(true);
               await bookSeats(route.params.eventid, selectedSeat, userLogin)
                 .then(async (response) => {
-                  if(response?.Id) {
+                  console.log(response);
+                  if(response?.id) {
                     setIsLoading(false);
                     ToastAndroid.showWithGravity(
                       'Seat Booking Success',

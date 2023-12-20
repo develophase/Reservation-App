@@ -11,7 +11,10 @@ import {
   FlatList,
   TouchableOpacity,
 } from 'react-native';
-import {apikey, eventDetails} from '../api/apicalls';
+import {
+  apikey, 
+  eventDetails
+} from '../api/apicalls';
 import {
   BORDERRADIUS,
   COLORS,
