@@ -17,24 +17,19 @@ import {
   FONTSIZE,
   SPACING,
 } from '../theme/theme';
+import {
+  apikey, 
+  getEventTicketBookedByUser,
+} from '../api/apicalls';
 import LinearGradient from 'react-native-linear-gradient';
 import CustomIcon from '../components/CustomIcon';
+import QRCode from 'react-native-qrcode-svg';
 
 const TicketScreen = ({navigation, route}: any) => {
   const [ticketData, setTicketData] = useState<any>(route.params);
+  const [ticketQRref, setTicketQRref] = useState<any>({});
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const ticket = await EncryptedStorage.getItem('ticket');
-        if (ticket !== undefined && ticket !== null) {
-          setTicketData(JSON.parse(ticket));
-        }
-      } catch (error) {
-        console.error('Something went wrong while getting Data', error);
-      }
-    })();
-  }, []);
+  console.log(ticketData);
 
   if (ticketData !== route.params && route.params != undefined) {
     setTicketData(route.params);
@@ -70,10 +65,20 @@ const TicketScreen = ({navigation, route}: any) => {
           />
       </View>
       <View style={styles.ticketContainer}>
-
         <ImageBackground
-          source={{uri: ticketData?.ticketImage}}
+          source={{uri: ticketData?.ticketimage}}
           style={styles.ticketBGImage}>
+          <View style={[styles.qrContainer, {position: 'absolute', bottom: 200 }]}>
+            <QRCode
+              value={
+                JSON.stringify({
+                  eventId: ticketData?.eventid,
+                  name: ticketData?.name,
+                  seat: ticketData?.num,
+                 })}
+              getRef={(c) => setTicketQRref(c)}
+              size={200}/>
+          </View>
           <LinearGradient
             colors={[COLORS.OrangeRGBA0, COLORS.Orange]}
             style={styles.linearGradient}>
@@ -114,16 +119,16 @@ const TicketScreen = ({navigation, route}: any) => {
           <View style={styles.ticketSeatContainer}>
             <View style={styles.subtitleContainer}>
               <Text style={styles.subheading}>Row</Text>
-              <Text style={styles.subtitle}>{ticketData?.seat.index+1}</Text>
+              <Text style={styles.subtitle}>{ticketData?.index+1}</Text>
             </View>
             <View style={styles.subtitleContainer}>
               <Text style={styles.subheading}>Col</Text>
-              <Text style={styles.subtitle}>{ticketData?.seat.subindex+1}</Text>
+              <Text style={styles.subtitle}>{ticketData?.subindex+1}</Text>
             </View>
 
             <View style={styles.subtitleContainer}>
               <Text style={styles.subheading}>Seats</Text>
-              <Text style={styles.subtitle}>{ticketData?.seat.num}</Text>
+              <Text style={styles.subtitle}>{ticketData?.num}</Text>
             </View>
           </View>
         </View>
@@ -141,6 +146,11 @@ const styles = StyleSheet.create({
   appHeaderContainer: {
     marginHorizontal: SPACING.space_36,
     marginTop: SPACING.space_20 * 2,
+  },
+  qrContainer : {
+    flex: 1,
+    alignSelf: 'center',
+    justifyContent: 'flex-end'
   },
   ticketContainer: {
     flex: 1,

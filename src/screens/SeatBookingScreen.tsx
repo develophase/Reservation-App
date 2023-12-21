@@ -27,7 +27,7 @@ import AppHeader from '../components/AppHeader';
 import CustomIcon from '../components/CustomIcon';
 import EncryptedStorage from 'react-native-encrypted-storage';
 
-const getBookedSeat = async (eventId: number, row: number, col: number, level: number) => {
+const getBookedSeat = async (eventId: number, row: number, col: number) => {
   try {
     let options = {
       method: 'GET',
@@ -48,7 +48,7 @@ const getBookedSeat = async (eventId: number, row: number, col: number, level: n
   }
 };
 
-const checkAvailableSeat = async (eventId: number, row: number, col: number, level: number) => {
+const checkAvailableSeat = async (eventId: number, row: number, col: number) => {
   try {
     let options = {
       method: 'GET',
@@ -69,7 +69,7 @@ const checkAvailableSeat = async (eventId: number, row: number, col: number, lev
   }
 };
 
-const generateSeats = async (bookedSeat: any[], userLogin: any, row: number, col: number, level: number) => {
+const generateSeats = async (bookedSeat: any[], userLogin: any, row: number, col: number) => {
   let numRow = row;
   let numColumn = col;
   let rowArray = [];
@@ -104,10 +104,10 @@ const bookSeats = async (eventId: number, bookedSeat: any, userLogin: any) => {
       "AccountsName": `${userLogin.Username}`,
       "ReservationDate": `${new Date()}`,
       "Status": 1,
-      "ReservationCode": `${eventId}-${userLogin.Id}-${bookedSeat.index}-${bookedSeat.subindex}`,
-      "QrCode": `${eventId}-${userLogin.Id}-${bookedSeat.index}-${bookedSeat.subindex}`,
+      "ReservationCode": `${eventId}-${userLogin.Id}-${bookedSeat.index}-${bookedSeat.subindex}-${bookedSeat.num}`,
+      "QrCode": `${eventId}-${userLogin.Id}-${bookedSeat.index}-${bookedSeat.subindex}-${bookedSeat.num}`,
       "Row": bookedSeat.index,
-      "Level": 1,
+      "Num": bookedSeat.num,
       "Col": bookedSeat.subindex,
       "ArrivalDate": `${new Date()}`,
       "AccountsId": userLogin.Id
@@ -147,10 +147,10 @@ const SeatBookingScreen = ({navigation, route}: any) => {
       if(session !== null && session !== undefined) {
         const userLoginTemp = await JSON.parse(session);
         setUserLogin(userLoginTemp);
-        await getBookedSeat(route.params.eventid, route.params.row, route.params.col, route.params.level)
+        await getBookedSeat(route.params.eventid, route.params.row, route.params.col)
           .then(async (bookedSeatByEvenId) => {
               setBookedSeat(bookedSeatByEvenId);
-              await generateSeats(bookedSeatByEvenId, userLoginTemp, route.params.row, route.params.col, route.params.level)
+              await generateSeats(bookedSeatByEvenId, userLoginTemp, route.params.row, route.params.col)
                 .then(async (seat) => {
                   setTwoDSeatArray(seat);
                   setIsLoading(false);
@@ -189,7 +189,7 @@ const SeatBookingScreen = ({navigation, route}: any) => {
       selectedSeat.num !== 0
     ) {
       try {
-        await checkAvailableSeat(route.params.eventid, selectedSeat.index, selectedSeat.subindex, 0)
+        await checkAvailableSeat(route.params.eventid, selectedSeat.index, selectedSeat.subindex)
           .then(async (available) => {
             if(available == undefined) {
               setIsLoading(true);
@@ -203,6 +203,7 @@ const SeatBookingScreen = ({navigation, route}: any) => {
                       ToastAndroid.SHORT,
                       ToastAndroid.BOTTOM,
                     );
+                    navigation.goBack()
                   }
                 })
             }
@@ -222,14 +223,6 @@ const SeatBookingScreen = ({navigation, route}: any) => {
           error,
         );
       }
-
-      // navigation.navigate('Ticket', {
-      //   seat: selectedSeat,
-      //   time: route.params.eventtime,
-      //   date: route.params.eventdate,
-      //   ticketImage: route.params.posterimg,
-      // });
-
     } else {
       ToastAndroid.showWithGravity(
         'Please Select Seats',

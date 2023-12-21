@@ -19,4 +19,7 @@ export const bookedSeatByEventIds = (offset: number, limit: number, where: strin
 export const createBookedSeat = () => {
   return `${RESERVATION_URL}`;
 }
+export const getEventTicketBookedByUser = (offset: number, limit: number, where: string) => {
+  return `${RESERVATION_URL}?offset=${offset}&limit=${limit}&where=${where}`;
+}
 

@@ -66,7 +66,7 @@ const TabNavigator = () => {
           },
         }}
       />
-      <Tab.Screen
+      {/* <Tab.Screen
         name="Ticket"
         component={TicketScreen}
         options={{
@@ -87,7 +87,7 @@ const TabNavigator = () => {
             );
           },
         }}
-      />
+      /> */}
       <Tab.Screen
         name="User"
         component={UserAccountScreen}

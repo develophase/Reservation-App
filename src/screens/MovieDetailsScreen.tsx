@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useRef} from 'react';
 import {
   Text,
   View,
@@ -13,7 +13,8 @@ import {
 } from 'react-native';
 import {
   apikey, 
-  eventDetails
+  eventDetails,
+  getEventTicketBookedByUser
 } from '../api/apicalls';
 import {
   BORDERRADIUS,
@@ -25,6 +26,7 @@ import {
 import AppHeader from '../components/AppHeader';
 import LinearGradient from 'react-native-linear-gradient';
 import CustomIcon from '../components/CustomIcon';
+import EncryptedStorage from 'react-native-encrypted-storage';
 import CategoryHeader from '../components/CategoryHeader';
 import CastCard from '../components/CastCard';
 
@@ -45,6 +47,27 @@ const getEventDetails = async (movieid: number) => {
   }
 };
 
+const getTicketDetails = async (eventId: number, userId: number) => {
+  try {
+    let options = {
+      method: 'GET',
+      headers: {
+        'xc-token': apikey
+      }
+    };
+
+    let query = `(EventsId,eq,${eventId})~and(AccountsId,eq,${userId})`;
+
+    let response = await fetch(getEventTicketBookedByUser(0, 1, query), options);
+    let json = await response.json();
+
+    return json.list;
+
+  } catch (error) {
+    console.error('Something went wrong while getting Data', error);
+  }
+};
+
 const getDate = (date: string) => {
   const currentDate = new Date(date);
   return `${date.substring(8, 10)} ${currentDate.toLocaleString('default', { month: 'long' })} ${date.substring(0, 4)} `
@@ -57,11 +80,30 @@ const getTime = (date: string) => {
 
 const MovieDetailsScreen = ({navigation, route}: any) => {
   const [eventData, setEventData] = useState<any>(undefined);
+  const userLogin = useRef<any>({});
+  const [ticketData, setTicketData] = useState<any>({});
+
+  const refresh = async () => {
+    await getEventDetails(route.params.movieid)
+      .then(async (eventData) => {
+        setEventData(eventData);
+          await EncryptedStorage.getItem('login_user')
+            .then (async (session) => {
+              if(session !== null && session !== undefined) {
+                userLogin.current = (JSON.parse(session));
+                await getTicketDetails(route.params.movieid, userLogin.current.Id)
+                  .then (async (ticket) => {
+                    console.log(ticket);
+                    setTicketData(ticket);
+                  })
+              }
+            });
+      });
+  }
 
   useEffect(() => {
     (async () => {
-      const tempEventData = await getEventDetails(route.params.movieid);
-      setEventData(tempEventData);
+        refresh();
     })();
   }, []);
 
@@ -143,22 +185,46 @@ const MovieDetailsScreen = ({navigation, route}: any) => {
       </View>
 
       <View>
-        <View>
+        <View style={{ flexDirection:"row", justifyContent: 'center'}}>
+          {ticketData.length == 0 ? (
+            <TouchableOpacity
+              style={styles.buttonBG}
+              onPress={() => {
+                navigation.push('SeatBooking', {
+                eventid: eventData.Id,
+                eventdate: getDate(eventData.Date),
+                eventtime: getTime(eventData.Date),
+                posterimg: eventData.PosterImg[0].signedUrl,
+                row: eventData.Row,
+                col: eventData.Col,
+                level: eventData.Level
+                });
+              }}>
+              <Text style={styles.buttonText}>Select Seats</Text>
+            </TouchableOpacity>
+          ) : ( 
           <TouchableOpacity
             style={styles.buttonBG}
             onPress={() => {
-              navigation.push('SeatBooking', {
-               eventid: eventData.Id,
-               eventdate: getDate(eventData.Date),
-               eventtime: getTime(eventData.Date),
-               posterimg: eventData.PosterImg[0].signedUrl,
-               row: eventData.Row,
-               col: eventData.Col,
-               level: eventData.Level
+              console.log(eventData);
+
+              navigation.push('Ticket', {
+                eventid: eventData.Id,
+                date: getDate(eventData.Date),
+                time: getTime(eventData.Date),
+                ticketimage: eventData.PosterImg[0].signedUrl,
+                index: ticketData[0].Row,
+                subindex: ticketData[0].Col,
+                num: ticketData[0].Num,
+                qrcode: ticketData[0].ReservationCode,
+                name: ticketData[0].AccountsName
+              }, {
+                onGoBack: () => refresh(),
               });
             }}>
-            <Text style={styles.buttonText}>Select Seats</Text>
+            <Text style={styles.buttonText}>Ticket Detail</Text>
           </TouchableOpacity>
+          )}
         </View>
       </View>
     </ScrollView>
@@ -277,6 +343,8 @@ const styles = StyleSheet.create({
   buttonBG: {
     alignItems: 'center',
     marginVertical: SPACING.space_24,
+    marginHorizontal: SPACING.space_10,
+    
   },
   buttonText: {
     borderRadius: BORDERRADIUS.radius_25 * 2,
