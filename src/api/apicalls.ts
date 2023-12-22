@@ -22,4 +22,7 @@ export const createBookedSeat = () => {
 export const getEventTicketBookedByUser = (offset: number, limit: number, where: string) => {
   return `${RESERVATION_URL}?offset=${offset}&limit=${limit}&where=${where}`;
 }
+export const registerUser = () => {
+  return `${ACCOUNT_URL}`;
+}
 

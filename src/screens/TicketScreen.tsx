@@ -70,12 +70,7 @@ const TicketScreen = ({navigation, route}: any) => {
           style={styles.ticketBGImage}>
           <View style={[styles.qrContainer, {position: 'absolute', bottom: 200 }]}>
             <QRCode
-              value={
-                JSON.stringify({
-                  eventId: ticketData?.eventid,
-                  name: ticketData?.name,
-                  seat: ticketData?.num,
-                 })}
+              value={`${ticketData?.eventid}-${ticketData?.name}-${ticketData?.num}`}
               getRef={(c) => setTicketQRref(c)}
               size={200}/>
           </View>
@@ -127,7 +122,7 @@ const TicketScreen = ({navigation, route}: any) => {
             </View>
 
             <View style={styles.subtitleContainer}>
-              <Text style={styles.subheading}>Seats</Text>
+              <Text style={styles.subheading}>Seat</Text>
               <Text style={styles.subtitle}>{ticketData?.num}</Text>
             </View>
           </View>

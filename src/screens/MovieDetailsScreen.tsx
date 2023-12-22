@@ -102,10 +102,13 @@ const MovieDetailsScreen = ({navigation, route}: any) => {
   }
 
   useEffect(() => {
-    (async () => {
-        refresh();
-    })();
-  }, []);
+    const unsubscribe = navigation.addListener('focus', () => {
+      refresh();
+      //Put your Data loading function here instead of my loadData()
+    });
+
+    return unsubscribe;
+  }, [navigation]);
 
   if (
     eventData == undefined &&
@@ -186,7 +189,7 @@ const MovieDetailsScreen = ({navigation, route}: any) => {
 
       <View>
         <View style={{ flexDirection:"row", justifyContent: 'center'}}>
-          {ticketData.length == 0 ? (
+          {ticketData?.length == 0 ? (
             <TouchableOpacity
               style={styles.buttonBG}
               onPress={() => {
@@ -200,29 +203,25 @@ const MovieDetailsScreen = ({navigation, route}: any) => {
                 level: eventData.Level
                 });
               }}>
-              <Text style={styles.buttonText}>Select Seats</Text>
+              <Text style={styles.buttonText}>Select Seat</Text>
             </TouchableOpacity>
           ) : ( 
-          <TouchableOpacity
-            style={styles.buttonBG}
-            onPress={() => {
-              console.log(eventData);
-
-              navigation.push('Ticket', {
-                eventid: eventData.Id,
-                date: getDate(eventData.Date),
-                time: getTime(eventData.Date),
-                ticketimage: eventData.PosterImg[0].signedUrl,
-                index: ticketData[0].Row,
-                subindex: ticketData[0].Col,
-                num: ticketData[0].Num,
-                qrcode: ticketData[0].ReservationCode,
-                name: ticketData[0].AccountsName
-              }, {
-                onGoBack: () => refresh(),
-              });
-            }}>
-            <Text style={styles.buttonText}>Ticket Detail</Text>
+            <TouchableOpacity
+              style={styles.buttonBG}
+              onPress={() => {
+                navigation.push('Ticket', {
+                  eventid: eventData.Id,
+                  date: getDate(eventData.Date),
+                  time: getTime(eventData.Date),
+                  ticketimage: eventData.PosterImg[0].signedUrl,
+                  index: ticketData[0].Row,
+                  subindex: ticketData[0].Col,
+                  num: ticketData[0].Num,
+                  qrcode: ticketData[0].ReservationCode,
+                  name: ticketData[0].AccountsName
+                });
+              }}>
+              <Text style={styles.buttonText}>Ticket Detail</Text>
           </TouchableOpacity>
           )}
         </View>
@@ -344,7 +343,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginVertical: SPACING.space_24,
     marginHorizontal: SPACING.space_10,
-    
   },
   buttonText: {
     borderRadius: BORDERRADIUS.radius_25 * 2,

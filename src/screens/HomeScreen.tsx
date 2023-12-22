@@ -95,9 +95,9 @@ const HomeScreen = ({navigation}: any) => {
         contentContainerStyle={styles.scrollViewContainer}>
         <StatusBar hidden />
 
-        <View style={styles.InputHeaderContainer}>
+        {/* <View style={styles.InputHeaderContainer}>
           <InputHeader searchFunction={searchMoviesFunction} />
-        </View>
+        </View> */}
 
         <View style={styles.loadingContainer}>
           <ActivityIndicator size={'large'} color={COLORS.Orange} />
@@ -109,10 +109,12 @@ const HomeScreen = ({navigation}: any) => {
   return (
     <ScrollView style={styles.container} bounces={false}>
       <StatusBar hidden />
-
+      
+      {/* 
       <View style={styles.InputHeaderContainer}>
         <InputHeader searchFunction={searchMoviesFunction} />
-      </View>
+      </View> 
+      */}
 
       <CategoryHeader title={'Nearby Event'} />
       <FlatList

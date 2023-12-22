@@ -57,7 +57,7 @@ const checkAvailableSeat = async (eventId: number, row: number, col: number) => 
       }
     };
 
-    let query = `(EventsId,eq,${eventId})~and(Row,eq,${row}~and(Col,eq,${col}`;
+    let query = `(EventsId,eq,${eventId})~and(Row,eq,${row})~and(Col,eq,${col})`;
 
     let response = await fetch(bookedSeatByEventIds(0, (row * col), query), options);
     let json = await response.json();
@@ -101,7 +101,7 @@ const bookSeats = async (eventId: number, bookedSeat: any, userLogin: any) => {
 
     let payload = {
       "EventsId": eventId,
-      "AccountsName": `${userLogin.Username}`,
+      "AccountsName": `${userLogin.Name}`,
       "ReservationDate": `${new Date()}`,
       "Status": 1,
       "ReservationCode": `${eventId}-${userLogin.Id}-${bookedSeat.index}-${bookedSeat.subindex}-${bookedSeat.num}`,
@@ -191,7 +191,7 @@ const SeatBookingScreen = ({navigation, route}: any) => {
       try {
         await checkAvailableSeat(route.params.eventid, selectedSeat.index, selectedSeat.subindex)
           .then(async (available) => {
-            if(available == undefined) {
+            if(available.length == 0) {
               setIsLoading(true);
               await bookSeats(route.params.eventid, selectedSeat, userLogin)
                 .then(async (response) => {
@@ -203,7 +203,7 @@ const SeatBookingScreen = ({navigation, route}: any) => {
                       ToastAndroid.SHORT,
                       ToastAndroid.BOTTOM,
                     );
-                    navigation.goBack()
+                    navigation.goBack({refresh: true});
                   }
                 })
             }

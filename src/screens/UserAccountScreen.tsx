@@ -1,10 +1,36 @@
-import * as React from 'react';
-import {Text, View, StyleSheet, StatusBar, Image, ScrollView} from 'react-native';
+import React, {useEffect, useState, useRef} from 'react';
+import {Text, View, StyleSheet, StatusBar, Image, ScrollView, TouchableOpacity} from 'react-native';
 import {COLORS, FONTFAMILY, FONTSIZE, SPACING} from '../theme/theme';
 import AppHeader from '../components/AppHeader';
 import SettingComponent from '../components/SettingComponent';
+import EncryptedStorage from 'react-native-encrypted-storage';
 
 const UserAccountScreen = ({navigation}: any) => {
+  const [userLogin, setUserLogin] = useState<any>({});
+
+  const logoutApp = async () => {
+    try {
+      await EncryptedStorage.removeItem("login_user")
+        .then(() => {
+          navigation.replace('SignOutNavigator');
+        })
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  useEffect(() => {
+    (async () => {
+      await EncryptedStorage.getItem('login_user')
+      .then (async (session) => {
+        if(session !== null && session !== undefined) {
+          setUserLogin(JSON.parse(session));
+        }
+      });
+    })();
+  }, []);
+
+
   return (
     <ScrollView style={styles.container}>
       <StatusBar hidden />
@@ -18,37 +44,35 @@ const UserAccountScreen = ({navigation}: any) => {
 
       <View style={styles.profileContainer}>
         <Image
-          source={require('../assets/image/avatar.png')}
+          source={require('../assets/image/cross.png')}
           style={styles.avatarImage}
         />
-        <Text style={styles.avatarText}>John Doe</Text>
+        <Text style={styles.avatarText}>{userLogin.Name}</Text>
       </View>
 
       <View style={styles.profileContainer}>
-        <SettingComponent
-          icon="user"
-          heading="Account"
-          subheading="Edit Profile"
-          subtitle="Change Password"
-        />
-        <SettingComponent
-          icon="setting"
-          heading="Settings"
-          subheading="Theme"
-          subtitle="Permissions"
-        />
-        <SettingComponent
-          icon="dollar"
-          heading="Offers & Refferrals"
-          subheading="Offer"
-          subtitle="Refferrals"
-        />
-        <SettingComponent
-          icon="info"
-          heading="About"
-          subheading="About Movies"
-          subtitle="more"
-        />
+       <TouchableOpacity
+          style={styles.button}>
+          <SettingComponent
+            icon="user"
+            heading="Account"
+            subheading="View Profile"
+            subtitle="Detail"
+          />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => { 
+            logoutApp();
+          }}>
+          <SettingComponent
+            icon="close"
+            heading="Logout"
+            subheading="From"
+            subtitle="App"
+          />
+        </TouchableOpacity>
       </View>
     </ScrollView>
   );
@@ -79,6 +103,9 @@ const styles = StyleSheet.create({
     marginTop: SPACING.space_16,
     color: COLORS.White,
   },
+  button: {
+    width: '100%'
+  }
 });
 
 export default UserAccountScreen;

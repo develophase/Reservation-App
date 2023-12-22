@@ -44,7 +44,7 @@ const TabNavigator = () => {
           },
         }}
       />
-      <Tab.Screen
+      {/* <Tab.Screen
         name="Search"
         component={SearchScreen}
         options={{
@@ -65,7 +65,7 @@ const TabNavigator = () => {
             );
           },
         }}
-      />
+      /> */}
       {/* <Tab.Screen
         name="Ticket"
         component={TicketScreen}
