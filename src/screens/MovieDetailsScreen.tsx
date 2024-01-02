@@ -82,6 +82,7 @@ const MovieDetailsScreen = ({navigation, route}: any) => {
   const [eventData, setEventData] = useState<any>(undefined);
   const userLogin = useRef<any>({});
   const [ticketData, setTicketData] = useState<any>({});
+  const [ticketSeat, setTicketSeat] = useState<any>("");
 
   const refresh = async () => {
     await getEventDetails(route.params.movieid)
@@ -93,7 +94,10 @@ const MovieDetailsScreen = ({navigation, route}: any) => {
                 userLogin.current = (JSON.parse(session));
                 await getTicketDetails(route.params.movieid, userLogin.current.Id)
                   .then (async (ticket) => {
-                    console.log(ticket);
+                    if(ticket?.length > 0) {
+                      const ticketSeat = ticket.map((item : any) => item.Num).join(', ');
+                      setTicketSeat(ticketSeat);
+                    }
                     setTicketData(ticket);
                   })
               }
@@ -216,8 +220,9 @@ const MovieDetailsScreen = ({navigation, route}: any) => {
                   ticketimage: eventData.PosterImg[0].signedUrl,
                   index: ticketData[0].Row,
                   subindex: ticketData[0].Col,
-                  num: ticketData[0].Num,
-                  qrcode: ticketData[0].ReservationCode,
+                  num: ticketSeat,
+                  //num: ticketData[0].Num,
+                  //qrcode: ticketData[0].ReservationCode,
                   name: ticketData[0].AccountsName
                 });
               }}>

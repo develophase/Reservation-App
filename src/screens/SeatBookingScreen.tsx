@@ -57,7 +57,7 @@ const checkAvailableSeat = async (eventId: number, row: number, col: number) => 
       }
     };
 
-    let query = `(EventsId,eq,${eventId})~and(Row,eq,${row})~and(Col,eq,${col})`;
+    let query = `(EventsId,eq,${eventId})`;
 
     let response = await fetch(bookedSeatByEventIds(0, (row * col), query), options);
     let json = await response.json();
@@ -136,7 +136,7 @@ const bookSeats = async (eventId: number, bookedSeat: any, userLogin: any) => {
 
 const SeatBookingScreen = ({navigation, route}: any) => {
   const [twoDSeatArray, setTwoDSeatArray] = useState<any[][]>([]);
-  const [selectedSeat, setSelectedSeat] = useState({ index: 0, subindex: 0, num: 0 });
+  const [selectedSeat, setSelectedSeat] = useState([]);
   const [bookedSeat, setBookedSeat] = useState<any[]>([]);
   const [userLogin, setUserLogin] = useState({});
   const [isLoading, setIsLoading] = useState(true);
@@ -148,9 +148,9 @@ const SeatBookingScreen = ({navigation, route}: any) => {
         const userLoginTemp = await JSON.parse(session);
         setUserLogin(userLoginTemp);
         await getBookedSeat(route.params.eventid, route.params.row, route.params.col)
-          .then(async (bookedSeatByEvenId) => {
-              setBookedSeat(bookedSeatByEvenId);
-              await generateSeats(bookedSeatByEvenId, userLoginTemp, route.params.row, route.params.col)
+          .then(async (bookedSeatByEventId) => {
+              setBookedSeat(bookedSeatByEventId);
+              await generateSeats(bookedSeatByEventId, userLoginTemp, route.params.row, route.params.col)
                 .then(async (seat) => {
                   setTwoDSeatArray(seat);
                   setIsLoading(false);
@@ -162,22 +162,18 @@ const SeatBookingScreen = ({navigation, route}: any) => {
 
   const selectSeat = (index: number, subindex: number, num: number) => {
     if (!twoDSeatArray[index][subindex].taken) {
-      let oldSeat = selectedSeat;
-      let newSeat = {
-        index: index,
-        subindex: subindex,
-        num: num
-      };
-
+      let array: any = [...selectedSeat];
       let temp = [...twoDSeatArray];
-
-      if (oldSeat.num == 0) {
-        temp[newSeat.index][newSeat.subindex].selected = !temp[newSeat.index][newSeat.subindex].selected;
-        setSelectedSeat(newSeat);
+      temp[index][subindex].selected = !temp[index][subindex].selected;
+      if (!array.includes(num)) {
+        array.push(num);
+        setSelectedSeat(array);
       } else {
-        temp[oldSeat.index][oldSeat.subindex].selected = !temp[oldSeat.index][oldSeat.subindex].selected;
-        temp[newSeat.index][newSeat.subindex].selected = !temp[newSeat.index][newSeat.subindex].selected;
-        setSelectedSeat(newSeat);
+        const tempindex = array.indexOf(num);
+        if (tempindex > -1) {
+          array.splice(tempindex, 1);
+          setSelectedSeat(array);
+        }
       }
 
       setTwoDSeatArray(temp);
@@ -186,12 +182,12 @@ const SeatBookingScreen = ({navigation, route}: any) => {
 
   const BookSeats = async () => {
     if (
-      selectedSeat.num !== 0
+      selectedSeat.length !== 0
     ) {
       try {
-        await checkAvailableSeat(route.params.eventid, selectedSeat.index, selectedSeat.subindex)
+        await checkAvailableSeat(route.params.eventid, route.params.row, route.params.col)
           .then(async (available) => {
-            if(available.length == 0) {
+            if (available.length == 0) {
               setIsLoading(true);
               await bookSeats(route.params.eventid, selectedSeat, userLogin)
                 .then(async (response) => {
@@ -206,17 +202,10 @@ const SeatBookingScreen = ({navigation, route}: any) => {
                     navigation.goBack({refresh: true});
                   }
                 })
+            } else {
+
             }
           })
-        // await EncryptedStorage.setItem(
-        //   'ticket',
-        //   JSON.stringify({
-        //     seat: selectedSeat,
-        //     time: route.params.eventtime,
-        //     date: route.params.eventdate,
-        //     ticketImage: route.params.posterimg,
-        //   }),
-        // );
       } catch (error) {
         console.error(
           'Something went Wrong while storing in BookSeats Functions',
