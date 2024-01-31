@@ -104,11 +104,9 @@ const bookSeats = async (eventId: number, bookedSeat: any, userLogin: any) => {
       "AccountsName": `${userLogin.Name}`,
       "ReservationDate": `${new Date()}`,
       "Status": 1,
-      "ReservationCode": `${eventId}-${userLogin.Id}-${bookedSeat.index}-${bookedSeat.subindex}-${bookedSeat.num}`,
+      "ReservationCode": `${eventId}-${userLogin.Id}-${bookedSeat.num}`,
       "QrCode": `${eventId}-${userLogin.Id}-${bookedSeat.index}-${bookedSeat.subindex}-${bookedSeat.num}`,
-      "Row": bookedSeat.index,
       "Num": bookedSeat.num,
-      "Col": bookedSeat.subindex,
       "ArrivalDate": `${new Date()}`,
       "AccountsId": userLogin.Id
     }
@@ -164,18 +162,22 @@ const SeatBookingScreen = ({navigation, route}: any) => {
     if (!twoDSeatArray[index][subindex].taken) {
       let array: any = [...selectedSeat];
       let temp = [...twoDSeatArray];
-      temp[index][subindex].selected = !temp[index][subindex].selected;
+
       if (!array.includes(num)) {
-        array.push(num);
-        setSelectedSeat(array);
+        if (array.length < 5) {
+          temp[index][subindex].selected = !temp[index][subindex].selected;
+          array.push(num);
+          setSelectedSeat(array);
+        }
       } else {
+        temp[index][subindex].selected = !temp[index][subindex].selected;
         const tempindex = array.indexOf(num);
         if (tempindex > -1) {
           array.splice(tempindex, 1);
           setSelectedSeat(array);
         }
       }
-
+  
       setTwoDSeatArray(temp);
     }
   };
