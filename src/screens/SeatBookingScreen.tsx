@@ -69,22 +69,62 @@ const checkAvailableSeat = async (eventId: number, row: number, col: number) => 
   }
 };
 
-const generateSeats = async (bookedSeat: any[], userLogin: any, row: number, col: number) => {
+const checkAvailability = async (bookedSeat: any[], planToBook: any[], row: number, col: number) => {
+  let booked =
+  bookedSeat.map((key: any) => {
+    return [...key.Num.split(",")];
+  });
+
+  let seatBooked = "";
+  let columnArray = [];
+
+  for (let i = 0; i < booked.length; i++) {
+      let cout = booked[i].join();
+      cout = i + 1 >= booked.length ? cout : cout + ",";
+      seatBooked = seatBooked + cout
+  }
+
+  let seatBookedAll = seatBooked.split(",");
+
+  for (let i = 0; i < planToBook.length; i++) {
+    let seatTaken = seatBookedAll.filter((val) => val == planToBook[i]);
+    if(seatTaken.length != 0) {
+      columnArray.push(planToBook[i])
+    } 
+  }
+
+  return columnArray;
+};
+
+const generateSeats = async (bookedSeat: any[], row: number, col: number) => {
   let numRow = row;
   let numColumn = col;
   let rowArray = [];
   let start = 1;
-  
+  let booked =
+  bookedSeat.map((key: any) => {
+    return [...key.Num.split(",")];
+  });
+
+  let seatBooked = "";
+
+  for (let i = 0; i < booked.length; i++) {
+      let cout = booked[i].join();
+      cout = i + 1 >= booked.length ? cout : cout + ",";
+      seatBooked = seatBooked + cout
+  }
+
+  let seatBookedAll = seatBooked.split(",");
+
   for (let i = 0; i < numRow; i++) {
     let columnArray = [];
     for (let j = 0; j < numColumn; j++) {
-      let seatTaken = bookedSeat.find(s => s.Row == i && s.Col == j && s.AccountsId != userLogin.Id);
-      let seatBooked = bookedSeat.find(s => s.Row == i && s.Col == j && s.AccountsId == userLogin.Id);
+      let seatTaken = seatBookedAll.filter((val) => val == start.toString());
 
       let seatObject = {
         number: start,
-        taken: seatTaken != null ? true : false,
-        selected: seatBooked != null ? true : false,
+        taken: seatTaken.length != 0 ? true : false,
+        selected: false,
       };
 
       columnArray.push(seatObject);
@@ -96,17 +136,20 @@ const generateSeats = async (bookedSeat: any[], userLogin: any, row: number, col
   return rowArray;
 };
 
-const bookSeats = async (eventId: number, bookedSeat: any, userLogin: any) => {
+const bookSeats = async (eventId: number, eventCode: string, bookedSeat: any, userLogin: any) => {
   try {
+
+    const numSplit = bookedSeat.join(",");
+    console.log(userLogin);
 
     let payload = {
       "EventsId": eventId,
       "AccountsName": `${userLogin.Name}`,
       "ReservationDate": `${new Date()}`,
       "Status": 1,
-      "ReservationCode": `${eventId}-${userLogin.Id}-${bookedSeat.num}`,
-      "QrCode": `${eventId}-${userLogin.Id}-${bookedSeat.index}-${bookedSeat.subindex}-${bookedSeat.num}`,
-      "Num": bookedSeat.num,
+      "ReservationCode": `${eventId}/${eventCode}/${userLogin.Id}`,
+      "QrCode": `${eventId}/${eventCode}/${userLogin.Id}`,
+      "Num": `${numSplit}`,
       "ArrivalDate": `${new Date()}`,
       "AccountsId": userLogin.Id
     }
@@ -139,23 +182,42 @@ const SeatBookingScreen = ({navigation, route}: any) => {
   const [userLogin, setUserLogin] = useState({});
   const [isLoading, setIsLoading] = useState(true);
 
+  const refresh = async () => {
+    setIsLoading(true);
+    const session = await EncryptedStorage.getItem('login_user');
+    if(session !== null && session !== undefined) {
+      const userLoginTemp = await JSON.parse(session);
+      setUserLogin(userLoginTemp);
+      await getBookedSeat(route.params.eventid, route.params.row, route.params.col)
+        .then(async (bookedSeatByEventId) => {
+            setBookedSeat(bookedSeatByEventId);
+            await generateSeats(bookedSeatByEventId, route.params.row, route.params.col)
+              .then(async (seat) => {
+                setTwoDSeatArray(seat);
+                setIsLoading(false);
+              });
+        });
+    }
+  };
+
   useEffect(() => {
-    (async () => {
-      const session = await EncryptedStorage.getItem('login_user');
-      if(session !== null && session !== undefined) {
-        const userLoginTemp = await JSON.parse(session);
-        setUserLogin(userLoginTemp);
-        await getBookedSeat(route.params.eventid, route.params.row, route.params.col)
-          .then(async (bookedSeatByEventId) => {
-              setBookedSeat(bookedSeatByEventId);
-              await generateSeats(bookedSeatByEventId, userLoginTemp, route.params.row, route.params.col)
-                .then(async (seat) => {
-                  setTwoDSeatArray(seat);
-                  setIsLoading(false);
-                });
-          });
-      }
-    })();
+    // (async () => {
+    //   const session = await EncryptedStorage.getItem('login_user');
+    //   if(session !== null && session !== undefined) {
+    //     const userLoginTemp = await JSON.parse(session);
+    //     setUserLogin(userLoginTemp);
+    //     await getBookedSeat(route.params.eventid, route.params.row, route.params.col)
+    //       .then(async (bookedSeatByEventId) => {
+    //           setBookedSeat(bookedSeatByEventId);
+    //           await generateSeats(bookedSeatByEventId, route.params.row, route.params.col)
+    //             .then(async (seat) => {
+    //               setTwoDSeatArray(seat);
+    //               setIsLoading(false);
+    //             });
+    //       });
+    //   }
+    // })();
+    refresh();
   }, []);
 
   const selectSeat = (index: number, subindex: number, num: number) => {
@@ -187,13 +249,13 @@ const SeatBookingScreen = ({navigation, route}: any) => {
       selectedSeat.length !== 0
     ) {
       try {
+        setIsLoading(true);
         await checkAvailableSeat(route.params.eventid, route.params.row, route.params.col)
           .then(async (available) => {
             if (available.length == 0) {
-              setIsLoading(true);
-              await bookSeats(route.params.eventid, selectedSeat, userLogin)
+              await bookSeats(route.params.eventid, route.params.code, selectedSeat, userLogin)
                 .then(async (response) => {
-                  console.log(response);
+                  //console.log(response);
                   if(response?.id) {
                     setIsLoading(false);
                     ToastAndroid.showWithGravity(
@@ -205,7 +267,33 @@ const SeatBookingScreen = ({navigation, route}: any) => {
                   }
                 })
             } else {
+              await checkAvailability(available, selectedSeat, route.params.row, route.params.col)
+                .then(async (respone) => {
 
+                  if(respone.length == 0) {
+                    await bookSeats(route.params.eventid, route.params.code, selectedSeat, userLogin)
+                      .then(async (response) => {
+                        if(response?.id) {
+                          setIsLoading(false);
+                          ToastAndroid.showWithGravity(
+                            'Seat Booking Success',
+                            ToastAndroid.SHORT,
+                            ToastAndroid.BOTTOM,
+                          );
+                          navigation.goBack({refresh: true});
+                        }
+                      })
+                  } else {
+                    
+                    setIsLoading(false);
+                    refresh();
+                    ToastAndroid.showWithGravity(
+                      `Seat ${respone.join()} Is Not Available`,
+                      ToastAndroid.LONG,
+                      ToastAndroid.BOTTOM,
+                    );
+                  }
+                })
             }
           })
       } catch (error) {

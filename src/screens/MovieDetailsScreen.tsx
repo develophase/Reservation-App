@@ -96,6 +96,7 @@ const MovieDetailsScreen = ({navigation, route}: any) => {
                   .then (async (ticket) => {
                     if(ticket?.length > 0) {
                       const ticketSeat = ticket.map((item : any) => item.Num).join(', ');
+                      console.log(ticketSeat);
                       setTicketSeat(ticketSeat);
                     }
                     setTicketData(ticket);
@@ -204,7 +205,8 @@ const MovieDetailsScreen = ({navigation, route}: any) => {
                 posterimg: eventData.PosterImg[0].signedUrl,
                 row: eventData.Row,
                 col: eventData.Col,
-                level: eventData.Level
+                level: eventData.Level,
+                code: eventData.Code,
                 });
               }}>
               <Text style={styles.buttonText}>Select Seat</Text>
@@ -218,12 +220,15 @@ const MovieDetailsScreen = ({navigation, route}: any) => {
                   date: getDate(eventData.Date),
                   time: getTime(eventData.Date),
                   ticketimage: eventData.PosterImg[0].signedUrl,
-                  index: ticketData[0].Row,
-                  subindex: ticketData[0].Col,
+                  index: 0,//ticketData[0].Row,
+                  subindex: 0,//ticketData[0].Col,
                   num: ticketSeat,
                   //num: ticketData[0].Num,
                   //qrcode: ticketData[0].ReservationCode,
-                  name: ticketData[0].AccountsName
+                  name: ticketData[0].AccountsName,
+                  eventname: eventData.Name,
+                  eventcode: eventData.Code,
+                  code: ticketData[0].ReservationCode,
                 });
               }}>
               <Text style={styles.buttonText}>Ticket Detail</Text>

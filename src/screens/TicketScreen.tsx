@@ -70,7 +70,7 @@ const TicketScreen = ({navigation, route}: any) => {
           style={styles.ticketBGImage}>
           <View style={[styles.qrContainer, {position: 'absolute', bottom: 200 }]}>
             <QRCode
-              value={`${ticketData?.eventid}-${ticketData?.name}-${ticketData?.num}`}
+              value={`${ticketData?.code}@${ticketData?.name}`}
               getRef={(c) => setTicketQRref(c)}
               size={200}/>
           </View>
@@ -113,14 +113,13 @@ const TicketScreen = ({navigation, route}: any) => {
           </View>
           <View style={styles.ticketSeatContainer}>
             <View style={styles.subtitleContainer}>
-              <Text style={styles.subheading}>Row</Text>
-              <Text style={styles.subtitle}>{ticketData?.index+1}</Text>
+              <Text style={styles.subheading}>Event</Text>
+              <Text style={styles.subtitle}>{ticketData?.eventcode}</Text>
             </View>
-            <View style={styles.subtitleContainer}>
-              <Text style={styles.subheading}>Col</Text>
-              <Text style={styles.subtitle}>{ticketData?.subindex+1}</Text>
-            </View>
-
+            {/* <View style={styles.subtitleContainer}>
+              <Text style={styles.subheading}>Ordered By</Text>
+              <Text style={styles.subtitle}>{ticketData?.name}</Text>
+            </View> */}
             <View style={styles.subtitleContainer}>
               <Text style={styles.subheading}>Seat</Text>
               <Text style={styles.subtitle}>{ticketData?.num}</Text>
