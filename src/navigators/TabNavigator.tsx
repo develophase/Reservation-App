@@ -1,6 +1,7 @@
 import React from 'react';
 import HomeScreen from '../screens/HomeScreen';
 import SearchScreen from '../screens/SearchScreen';
+import AnnouncementScreen from '../screens/AnnouncementScreen';
 import TicketScreen from '../screens/TicketScreen';
 import UserAccountScreen from '../screens/UserAccountScreen';
 import {COLORS, FONTSIZE, SPACING} from '../theme/theme';
@@ -36,6 +37,28 @@ const TabNavigator = () => {
                 ]}>
                 <CustomIcon
                   name="video"
+                  color={COLORS.White}
+                  size={FONTSIZE.size_30}
+                />
+              </View>
+            );
+          },
+        }}
+      />
+      <Tab.Screen
+        name="Announcement"
+        component={AnnouncementScreen}
+        options={{
+          tabBarShowLabel: false,
+          tabBarIcon: ({focused, color, size}) => {
+            return (
+              <View
+                style={[
+                  styles.activeTabBackground,
+                  focused ? {backgroundColor: COLORS.Orange} : {},
+                ]}>
+                <CustomIcon
+                  name="info"
                   color={COLORS.White}
                   size={FONTSIZE.size_30}
                 />
