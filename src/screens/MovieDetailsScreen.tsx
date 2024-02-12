@@ -75,7 +75,7 @@ const getDate = (date: string) => {
 
 const getTime = (date: string) => {
   const currentDate = new Date(date);
-  return `${currentDate.getHours()}:${currentDate.getMinutes()}`;
+  return `${currentDate.getHours().toString().padStart(2, '0')}:${currentDate.getMinutes().toString().padStart(2, '0')}`;
 };
 
 const MovieDetailsScreen = ({navigation, route}: any) => {

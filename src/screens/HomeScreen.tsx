@@ -149,7 +149,7 @@ const HomeScreen = ({navigation}: any) => {
               isLast={index == nearbyEventList?.length - 1 ? true : false}
               title={item.Name}
               imagePath={item.PosterImg ? item.PosterImg[0].signedUrl : ''}
-              genre={[date.toDateString(), `${date.getHours()}:${date.getMinutes()}`]}
+              genre={[date.toDateString(), `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`]}
               vote_count={item.TotalSeat}
             />
           );

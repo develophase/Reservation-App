@@ -315,7 +315,7 @@ const SeatBookingScreen = ({navigation, route}: any) => {
     <ScrollView
       style={styles.container}
       bounces={false}
-      showsVerticalScrollIndicator={false}>
+      showsVerticalScrollIndicator={true}>
       <StatusBar hidden />
       <View>
         <ImageBackground
@@ -343,62 +343,64 @@ const SeatBookingScreen = ({navigation, route}: any) => {
           <ActivityIndicator size={'large'} color={COLORS.Orange} />
         ) : 
         (
-        <View>
-          <View style={styles.seatContainer}>
-            <View style={styles.containerGap20}>
-              {twoDSeatArray?.map((item, index) => {
-                return (
-                  <View key={index} style={styles.seatRow}>
-                    {item?.map((subitem, subindex) => {
-                      return (
-                        <TouchableOpacity
-                          key={subitem.number}
-                          onPress={() => {
-                            selectSeat(index, subindex, subitem.number);
-                          }}>
-                          <CustomIcon
-                            name="seat"
-                            style={[
-                              styles.seatIcon,
-                              subitem.taken ? {color: COLORS.Grey} : {},
-                              subitem.selected ? {color: COLORS.Orange} : {},
-                            ]}
-                          />
-                        </TouchableOpacity>
-                      );
-                    })}
+          <View style={styles.scrollViewContainer}>
+            <ScrollView horizontal={true} showsHorizontalScrollIndicator={true}>
+              <View style={styles.seatContainer}>
+                <View style={styles.containerGap20}>
+                  {twoDSeatArray?.map((item, index) => {
+                    return (
+                      <View key={index} style={styles.seatRow}>
+                        {item?.map((subitem, subindex) => {
+                          return (
+                            <TouchableOpacity
+                              key={subitem.number}
+                              onPress={() => {
+                                selectSeat(index, subindex, subitem.number);
+                              }}>
+                              <CustomIcon
+                                name="seat"
+                                style={[
+                                  styles.seatIcon,
+                                  subitem.taken ? {color: COLORS.Grey} : {},
+                                  subitem.selected ? {color: COLORS.Orange} : {},
+                                ]}
+                              />
+                              <Text style={styles.seatText}>{subitem.number}</Text>
+                            </TouchableOpacity>
+                          );
+                        })}
+                      </View>
+                    );
+                  })}
+                </View>
+                <View style={styles.seatRadioContainer}>
+                  <View style={styles.radioContainer}>
+                    <CustomIcon name="radio" style={styles.radioIcon} />
+                    <Text style={styles.radioText}>Available</Text>
                   </View>
-                );
-              })}
+                  <View style={styles.radioContainer}>
+                    <CustomIcon
+                      name="radio"
+                      style={[styles.radioIcon, {color: COLORS.Grey}]}
+                    />
+                    <Text style={styles.radioText}>Taken</Text>
+                  </View>
+                  <View style={styles.radioContainer}>
+                    <CustomIcon
+                      name="radio"
+                      style={[styles.radioIcon, {color: COLORS.Orange}]}
+                    />
+                    <Text style={styles.radioText}>Selected</Text>
+                  </View>
+                </View>
+              </View>
+            </ScrollView>
+            <View style={styles.buttonPriceContainer}>
+              <TouchableOpacity onPress={BookSeats}>
+                <Text style={styles.buttonText}>Book Seat</Text>
+              </TouchableOpacity>
             </View>
-            <View style={styles.seatRadioContainer}>
-              <View style={styles.radioContainer}>
-                <CustomIcon name="radio" style={styles.radioIcon} />
-                <Text style={styles.radioText}>Available</Text>
-              </View>
-              <View style={styles.radioContainer}>
-                <CustomIcon
-                  name="radio"
-                  style={[styles.radioIcon, {color: COLORS.Grey}]}
-                />
-                <Text style={styles.radioText}>Taken</Text>
-              </View>
-              <View style={styles.radioContainer}>
-                <CustomIcon
-                  name="radio"
-                  style={[styles.radioIcon, {color: COLORS.Orange}]}
-                />
-                <Text style={styles.radioText}>Selected</Text>
-              </View>
-            </View>
-          </View>
-
-          <View style={styles.buttonPriceContainer}>
-            <TouchableOpacity onPress={BookSeats}>
-              <Text style={styles.buttonText}>Book Seat</Text>
-            </TouchableOpacity>
-          </View>
-        </View> 
+          </View> 
         )
       }
     </ScrollView>
@@ -412,6 +414,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.Black,
   },
   scrollViewContainer: {
+    paddingHorizontal: 20,
     flex: 1,
   },
   loadingContainer: {
@@ -470,6 +473,12 @@ const styles = StyleSheet.create({
   radioText: {
     fontFamily: FONTFAMILY.poppins_medium,
     fontSize: FONTSIZE.size_12,
+    color: COLORS.White,
+  },
+  seatText: {
+    fontFamily: FONTFAMILY.poppins_medium,
+    fontSize: FONTSIZE.size_12,
+    textAlign: 'center',
     color: COLORS.White,
   },
   containerGap24: {
