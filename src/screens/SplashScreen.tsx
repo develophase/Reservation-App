@@ -18,6 +18,7 @@ import {
   } from '../theme/theme';
 import EncryptedStorage from 'react-native-encrypted-storage';
 import { apikey, getAccountsByParams } from '../api/apicalls';
+import LottieView from "lottie-react-native";
 
 const SplashScreen = ({navigation}: any) => {
   //State for ActivityIndicator animation
@@ -34,23 +35,37 @@ const SplashScreen = ({navigation}: any) => {
           value === null ? 'SignOutNavigator' : 'SignInNavigator'
         ),
       );
-    }, 5000);
+    }, 7000);
   }, []);
 
   return (
     <View style={styles.container}>
-      <Image
-        source={require('../assets/image/god.png')}
-        style={{width: '90%', resizeMode: 'contain', margin: 30}}
-      />
-      <ActivityIndicator
-        animating={animating}
-        color="#FFFFFF"
-        size="large"
-        style={styles.activityIndicator}
-      />
+      <LottieView
+        source={require('../assets/Animation.json')}
+        style={{ 
+          width: '50%', 
+          height: '50%'
+        }}
+        autoPlay
+        loop>
+      </LottieView>
     </View>
   );
+
+  // return (
+  //   <View style={styles.container}>
+  //     <Image
+  //       source={require('../assets/image/god.png')}
+  //       style={{width: '90%', resizeMode: 'contain', margin: 30}}
+  //     />
+  //     <ActivityIndicator
+  //       animating={animating}
+  //       color="#FFFFFF"
+  //       size="large"
+  //       style={styles.activityIndicator}
+  //     />
+  //   </View>
+  // );
 };
 
 export default SplashScreen;
@@ -60,7 +75,9 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: COLORS.Black,
+    backgroundColor: COLORS.Yellow,
+    // width:'100%', 
+    // height:'100%'
   },
   activityIndicator: {
     alignItems: 'center',

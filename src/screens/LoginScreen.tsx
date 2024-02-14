@@ -115,7 +115,7 @@ const LoginScreen = ({navigation}: any) => {
                 <CategoryHeader title={'Login'} />
                 <View style={{alignItems: 'center'}}>
                     <Image
-                        source={require('../assets/image/god.png')}
+                        source={require('../assets/image/cross.png')}
                         style={{
                         width: '50%',
                         height: 100,

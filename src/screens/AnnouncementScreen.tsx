@@ -111,19 +111,25 @@ const AnnouncementScreen = ({navigation}: any) => {
 
             {latestAnnoucementPosterList?.map((item, index) => {
                 return (
-                    <View style={[
-                        styles.container,
-                        {margin: SPACING.space_12},
-                        {marginLeft: SPACING.space_36},
-                        {marginRight: SPACING.space_36},
-                        {maxWidth: width * 0.7},
-                      ]}>
+                    // <View style={[
+                    //     styles.container,
+                    //     {margin: SPACING.space_12},
+                    //     {marginLeft: SPACING.space_36},
+                    //     {marginRight: SPACING.space_36},
+                    //     {maxWidth: width * 0.7}
+                    //   ]}>
                         <Image
-                            style={[styles.cardImage, {width: width * 0.7}]}
+                            key={index}
+                            style={[
+                                styles.cardImage,
+                                {margin: SPACING.space_12},
+                                {marginLeft: SPACING.space_36},
+                                {marginRight: SPACING.space_36},
+                                {width: width * 0.8}]}
                             source={{uri: item.signedUrl}}
                         />
 
-                    </View>
+                    // </View>
                 );
             })}
         </ScrollView>
