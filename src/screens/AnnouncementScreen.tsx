@@ -134,8 +134,6 @@ const AnnouncementScreen = ({navigation}: any) => {
             })}
         </ScrollView>
     );
-    
-
 };
 
 const styles = StyleSheet.create({

@@ -46,9 +46,15 @@ const SplashScreen = ({navigation}: any) => {
           width: '50%', 
           height: '50%'
         }}
-        autoPlay
-        loop>
+        autoPlay={true}
+        loop={false}>
       </LottieView>
+      <ActivityIndicator
+        animating={animating}
+        color="#FFFFFF"
+        size="large"
+        style={styles.activityIndicator}
+      />
     </View>
   );
 
@@ -75,7 +81,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: COLORS.Yellow,
+    backgroundColor: COLORS.Black,
     // width:'100%', 
     // height:'100%'
   },
