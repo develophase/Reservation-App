@@ -1,4 +1,5 @@
 import React, {useEffect, useState, useMemo} from 'react';
+import ImageView from "react-native-image-viewing";
 import {
   Text,
   View,
@@ -7,7 +8,10 @@ import {
   ActivityIndicator,
   ScrollView,
   StatusBar,
-  Image
+  Image,
+  Modal,
+  TouchableWithoutFeedback,
+  TouchableOpacity
 } from 'react-native';
 import {  
     BORDERRADIUS,
@@ -68,18 +72,38 @@ const AnnouncementScreen = ({navigation}: any) => {
 
     const [latestAnnouncementList, setLatestAnnouncementList] = useState<any[]>([]);
     const [latestAnnoucementPosterList, setlatestAnnoucementPosterList] = useState<any[]>([]);
+    const [imageList, setImageList] = useState<any[]>([]);
+    const [isModalOpened, setIsModalOpened] = useState(false);
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const openModal = (index: number) => {
+        setIsModalOpened(true);
+        setCurrentIndex(index);
+    };
+    const closeModal = () => {
+        setIsModalOpened(false);
+        setCurrentIndex(0);
+    };
+    const constructImageList = (imageList: any[]) => {
+        const images = 
+            imageList.map(s => ({
+                uri: s.signedUrl 
+            }));
 
+        setImageList(images);
+    };
+    
     useEffect(() => {
         (async () => {
           var weekNumber = currentWeekNumber(); 
           var year = currentYear();
-          
           const query = `-Date`;
     
           let tempAnnouncementList = await getLatestAnnouncementList(1, 0, query);
           setLatestAnnouncementList([...tempAnnouncementList]);
+
           if(tempAnnouncementList.length > 0) {
             setlatestAnnoucementPosterList([...tempAnnouncementList[0].PosterImg]);
+            constructImageList([...tempAnnouncementList[0].PosterImg]);
           }
         })();
     }, []);
@@ -102,7 +126,7 @@ const AnnouncementScreen = ({navigation}: any) => {
                 </View>
             </ScrollView>
         );
-    }    
+    }
 
     return (
         <ScrollView style={styles.container} bounces={false}>
@@ -118,8 +142,9 @@ const AnnouncementScreen = ({navigation}: any) => {
                     //     {marginRight: SPACING.space_36},
                     //     {maxWidth: width * 0.7}
                     //   ]}>
+                    <View key={index}>
+                        <TouchableOpacity onPress={() => openModal(index)}>
                         <Image
-                            key={index}
                             style={[
                                 styles.cardImage,
                                 {margin: SPACING.space_12},
@@ -128,10 +153,13 @@ const AnnouncementScreen = ({navigation}: any) => {
                                 {width: width * 0.8}]}
                             source={{uri: item.signedUrl}}
                         />
-
-                    // </View>
+                        </TouchableOpacity>
+                    </View>
                 );
             })}
+
+            <ImageView images={imageList} visible={isModalOpened} imageIndex={currentIndex} onRequestClose={() => closeModal()}/>
+
         </ScrollView>
     );
 };

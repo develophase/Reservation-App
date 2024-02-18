@@ -138,6 +138,7 @@ const MovieDetailsScreen = ({navigation, route}: any) => {
       </ScrollView>
     );
   }
+  
   return (
     <ScrollView
       style={styles.container}
@@ -206,7 +207,7 @@ const MovieDetailsScreen = ({navigation, route}: any) => {
                 row: eventData.Row,
                 col: eventData.Col,
                 level: eventData.Level,
-                code: eventData.Code,
+                code: eventData.Code
                 });
               }}>
               <Text style={styles.buttonText}>Select Seat</Text>

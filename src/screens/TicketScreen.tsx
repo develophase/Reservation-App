@@ -65,12 +65,15 @@ const TicketScreen = ({navigation, route}: any) => {
           />
       </View>
       <View style={styles.ticketContainer}>
-        <ImageBackground
-          source={{uri: ticketData?.ticketimage}}
+        <View
           style={styles.ticketBGImage}>
-          <View style={[styles.qrContainer, {position: 'absolute', bottom: 200 }]}>
+          <Image
+            source={require('../assets/image/god.png')}
+            style={styles.cardImage}
+          />
+          <View style={[styles.qrContainer, {position: 'absolute', bottom: 100 }]}>
             <QRCode
-              value={`${ticketData?.code}@${ticketData?.name}`}
+              value={`${ticketData?.code}`}
               getRef={(c) => setTicketQRref(c)}
               size={200}/>
           </View>
@@ -88,7 +91,7 @@ const TicketScreen = ({navigation, route}: any) => {
                 {position: 'absolute', bottom: -40, right: -40},
               ]}></View>
           </LinearGradient>
-        </ImageBackground>
+        </View>
         <View style={styles.linear}></View>
 
         <View style={styles.ticketFooter}>
@@ -141,10 +144,20 @@ const styles = StyleSheet.create({
     marginHorizontal: SPACING.space_36,
     marginTop: SPACING.space_20 * 2,
   },
+  cardImage: {
+    top: 10,
+    width: '100%',
+    height: 135,
+    position: 'absolute',
+    alignSelf: 'center',
+    justifyContent: 'flex-end',
+    zIndex: 5
+  },
   qrContainer : {
     flex: 1,
     alignSelf: 'center',
-    justifyContent: 'flex-end'
+    justifyContent: 'flex-end',
+    zIndex: 5
   },
   ticketContainer: {
     flex: 1,
@@ -160,7 +173,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   linearGradient: {
-    height: '70%',
+    height: '100%',
   },
   linear: {
     borderTopColor: COLORS.Black,

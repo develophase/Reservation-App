@@ -36,7 +36,7 @@ const TabNavigator = () => {
                   focused ? {backgroundColor: COLORS.Orange} : {},
                 ]}>
                 <CustomIcon
-                  name="video"
+                  name="ticket"
                   color={COLORS.White}
                   size={FONTSIZE.size_30}
                 />
