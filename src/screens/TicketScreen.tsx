@@ -68,7 +68,7 @@ const TicketScreen = ({navigation, route}: any) => {
         <View
           style={styles.ticketBGImage}>
           <Image
-            source={require('../assets/image/god.png')}
+            source={require('../assets/image/bg.png')}
             style={styles.cardImage}
           />
           <View style={[styles.qrContainer, {position: 'absolute', bottom: 100 }]}>
@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
     marginTop: SPACING.space_20 * 2,
   },
   cardImage: {
-    top: 10,
+    top: -25,
     width: '100%',
     height: 135,
     position: 'absolute',
