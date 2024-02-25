@@ -35,7 +35,7 @@ const SplashScreen = ({navigation}: any) => {
           value === null ? 'SignOutNavigator' : 'SignInNavigator'
         ),
       );
-    }, 7000);
+    }, 5000);
   }, []);
 
   return (
