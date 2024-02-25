@@ -23,6 +23,7 @@ import {
   FONTSIZE,
   SPACING,
 } from '../theme/theme';
+import ImageView from "react-native-image-viewing";
 import AppHeader from '../components/AppHeader';
 import LinearGradient from 'react-native-linear-gradient';
 import CustomIcon from '../components/CustomIcon';
@@ -83,20 +84,41 @@ const MovieDetailsScreen = ({navigation, route}: any) => {
   const userLogin = useRef<any>({});
   const [ticketData, setTicketData] = useState<any>({});
   const [ticketSeat, setTicketSeat] = useState<any>("");
+  const [imageList, setImageList] = useState<any[]>([]);
+  const [isModalOpened, setIsModalOpened] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
+  const openModal = (index: number) => {
+    console.log("clicked");
+    setIsModalOpened(true);
+    setCurrentIndex(index);
+  };
+  const closeModal = () => {
+      setIsModalOpened(false);
+      setCurrentIndex(0);
+  };
+  const constructImageList = (imageList: any[]) => {
+      const images = 
+          imageList.map(s => ({
+              uri: s.signedUrl 
+          }));
+
+      setImageList(images);
+      console.log(imageList);
+  };
   const refresh = async () => {
     await getEventDetails(route.params.movieid)
       .then(async (eventData) => {
         setEventData(eventData);
+        constructImageList([...eventData.PosterImg]);
           await EncryptedStorage.getItem('login_user')
             .then (async (session) => {
-              if(session !== null && session !== undefined) {
+              if (session !== null && session !== undefined) {
                 userLogin.current = (JSON.parse(session));
                 await getTicketDetails(route.params.movieid, userLogin.current.Id)
                   .then (async (ticket) => {
-                    if(ticket?.length > 0) {
+                    if (ticket?.length > 0) {
                       const ticketSeat = ticket.map((item : any) => item.Num).join(', ');
-                      console.log(ticketSeat);
                       setTicketSeat(ticketSeat);
                     }
                     setTicketData(ticket);
@@ -104,7 +126,7 @@ const MovieDetailsScreen = ({navigation, route}: any) => {
               }
             });
       });
-  }
+  };
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
@@ -165,10 +187,19 @@ const MovieDetailsScreen = ({navigation, route}: any) => {
           </LinearGradient>
         </ImageBackground>
         <View style={styles.imageBG}></View>
-        <Image
-          source={{ uri: eventData.PosterImg[0].signedUrl }}
-          style={styles.cardImage}
-        />
+        {eventData.PosterImg.map((item :any[], index: number) => { 
+          return (
+            <View key={index}>
+              <TouchableOpacity onPress={() => openModal(index)}>
+                <Image
+                  source={{ uri: eventData.PosterImg[index].signedUrl }}
+                  style={styles.cardImage}
+                />
+              </TouchableOpacity>
+            </View>
+          )
+        })}
+        
       </View>
 
       <View style={styles.timeContainer}>
@@ -192,6 +223,8 @@ const MovieDetailsScreen = ({navigation, route}: any) => {
         </View>
         <Text style={styles.descriptionText}>{eventData?.Desc}</Text>
       </View>
+
+      <ImageView images={imageList} visible={isModalOpened} imageIndex={currentIndex} onRequestClose={() => closeModal()}/>
 
       <View>
         <View style={{ flexDirection:"row", justifyContent: 'center'}}>
@@ -237,6 +270,7 @@ const MovieDetailsScreen = ({navigation, route}: any) => {
           )}
         </View>
       </View>
+      
     </ScrollView>
   );
 };
