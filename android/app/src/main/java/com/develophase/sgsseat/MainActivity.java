@@ -1,4 +1,4 @@
-package com.movie_app;
+package com.develophase.sgsseat;
 
 import android.os.Bundle;
 import com.facebook.react.ReactActivity;
@@ -21,7 +21,7 @@ public class MainActivity extends ReactActivity {
 
   @Override
   protected String getMainComponentName() {
-    return "Movie_App";
+    return "SGS_Seat";
   }
 
   /**

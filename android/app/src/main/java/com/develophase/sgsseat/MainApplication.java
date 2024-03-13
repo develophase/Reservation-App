@@ -1,4 +1,4 @@
-package com.movie_app;
+package com.develophase.sgsseat;
 
 import android.app.Application;
 import com.facebook.react.PackageList;

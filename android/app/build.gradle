@@ -73,9 +73,9 @@ android {
 
     compileSdkVersion rootProject.ext.compileSdkVersion
 
-    namespace "com.movie_app"
+    namespace "com.develophase.sgsseat"
     defaultConfig {
-        applicationId "com.movie_app"
+        applicationId "com.develophase.sgsseat"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
